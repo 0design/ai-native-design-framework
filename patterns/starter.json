@@ -1,0 +1,89 @@
+{
+  "aindfVersion": "0.1",
+  "patterns": [
+    {
+      "id": "newsletter-subscribe",
+      "intent": "Newsletter subscribe section",
+      "match": ["subscribe", "newsletter", "mailing list", "розсилка", "підписка"],
+      "produces": "section",
+      "compose": {
+        "base": "CTA",
+        "slots": {
+          "header": [
+            { "component": "Typography", "as": "offer-heading", "prominent": true },
+            { "component": "Typography", "as": "offer-desc", "role": "muted" }
+          ],
+          "body": [
+            { "preset": "inline-form", "base": "Field-group", "children": [
+              { "component": "Input", "interaction": "input", "props": { "icon": true, "placeholder": "{param:placeholder}" } },
+              { "component": "Button", "interaction": "button", "props": { "style": "{param:btnStyle}" } }
+            ] }
+          ]
+        }
+      },
+      "modifiers": { "background": "{param:bg}", "shader": "{param:shader}" },
+      "parameters": [
+        { "key": "btnStyle", "ask": "Text or icon button?", "options": ["text", "icon"], "default": "text" },
+        { "key": "bg", "ask": "Section background?", "options": ["flat", "gradient", "shader"], "default": "gradient" },
+        { "key": "shader", "ask": "Shader on background?", "options": ["none", "grain", "mesh"], "default": "none" },
+        { "key": "placeholder", "ask": "Input placeholder text?", "default": "your e-mail" }
+      ],
+      "content": { "offer-heading": "<prominent offer>", "offer-desc": "<one line on why to subscribe>" }
+    },
+    {
+      "id": "chat-interface",
+      "intent": "Chat interface",
+      "match": ["chat", "messages", "messenger", "чат"],
+      "produces": "block",
+      "compose": {
+        "base": "Stack-layout",
+        "slots": {
+          "body": [
+            { "component": "Date-separator", "repeat": "per-day", "labels": ["today", "yesterday", "2 weeks ago", "13.02.2025"] },
+            { "component": "Message-bubble", "repeat": "per-message", "with": [
+              { "component": "Avatar", "interaction": "{param:avatarClickable}" },
+              { "component": "Reaction-bar", "position": "under-bubble" }
+            ] }
+          ],
+          "footer": [
+            { "component": "Composer", "fixed": true, "with": [
+              { "component": "Input", "interaction": "input", "props": { "inline": true } },
+              { "component": "Button", "interaction": "button", "props": { "icon": "upload" } },
+              { "component": "Button", "interaction": "button", "props": { "icon": "send" } }
+            ] }
+          ]
+        }
+      },
+      "parameters": [
+        { "key": "avatarClickable", "ask": "Are avatars clickable (open profile)?", "options": ["static", "link"], "default": "static" }
+      ],
+      "gaps": ["Message-bubble", "Reaction-bar", "Date-separator", "Composer"]
+    },
+    {
+      "id": "feature-grid",
+      "intent": "Features section",
+      "match": ["features", "переваги", "фічі", "what you get"],
+      "produces": "section",
+      "compose": {
+        "base": "Section",
+        "slots": {
+          "header": [
+            { "as": "section-header", "with": [
+              { "component": "Typography", "as": "title" },
+              { "component": "Typography", "as": "subtitle", "role": "muted" }
+            ] }
+          ],
+          "body": [
+            { "base": "Grid-layout", "cols": "{param:cols}", "children": [
+              { "component": "Card", "preset": "feature", "interaction": "{param:cardInteraction}", "repeat": "per-feature" }
+            ] }
+          ]
+        }
+      },
+      "parameters": [
+        { "key": "cols", "ask": "How many columns in the grid?", "options": ["2", "3", "4"], "default": "3" },
+        { "key": "cardInteraction", "ask": "Is FeatureCard static or clickable?", "options": ["static", "link", "button"], "default": "static" }
+      ]
+    }
+  ]
+}
