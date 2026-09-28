@@ -17,8 +17,9 @@ Website: https://aindf.oleg.design
 - [`patterns/starter.json`](patterns/starter.json): an example pattern for a
   newsletter signup section.
 
-The conformance validator and MCP server described in `SPEC.md` are not in this
-repo yet. For now you can check your files against the schemas.
+The validator, MCP server and builder come in the next release, see
+[Coming in v2](#coming-in-v2). For now you can check your files against the
+schemas.
 
 ## Getting started
 
@@ -33,6 +34,25 @@ repo yet. For now you can check your files against the schemas.
    ```
 
    Swap in your own schema and data file.
+
+## Coming in v2
+
+The next release adds three tools that work together:
+
+- **MCP server.** Your AI agent looks up what your design system offers
+  (components, slots, variants, tokens) through MCP instead of guessing.
+- **Validator.** Checks a screen config before it is built. It rejects unknown
+  components, slots or modifiers, one-off styles and code.
+- **Builder.** Builds the screen from that config and a specific version of your
+  design system. The agent edits the config, not HTML, CSS or JSX.
+
+If your design system is missing something, the agent asks for it to be added
+instead of writing its own CSS.
+
+Why it matters: fix something once in the design system and every screen that
+uses it gets the fix.
+
+To hear when v2 is out, watch this repo on GitHub: **Watch → Custom → Releases**.
 
 ## Status
 
