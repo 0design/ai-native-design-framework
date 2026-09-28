@@ -19,7 +19,7 @@ contracts that make it agent-navigable.
 > machine-readable contracts, derived from a single source, and enforced
 > automatically.**
 
-"AI-Native" is earned by mechanisms, not by labelling:
+A design system is AI-Native when it has these five properties:
 
 1. **Semantic, role-based naming** — components and tokens are named by intent,
    not appearance (`color-accent`, not `blue-500`). Agents select by meaning.
@@ -152,6 +152,5 @@ AINDF uses semver. A conforming system pins the AINDF version it targets
 
 ---
 
-*Draft 0.1 — co-evolved with its first reference implementation (Malevich).
-Subject to change until 1.0, which will not be tagged before a real
-implementation has proven the specification.*
+*Draft 0.1. The spec may still change before 1.0. Version 1.0 will come
+after at least one real design system has been built on it.*

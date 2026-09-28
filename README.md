@@ -1,54 +1,48 @@
 # AI-Native Design Framework (AINDF)
 
-A specification for design systems an AI agent can **discover, reason about,
-generate, and validate** — without leaving humans behind.
+Make generic UI look consistent. No hardcoding, no ignoring your design system.
 
-AINDF is **not** a code library. It is a **specification**: the portable
-contract layer any design system can conform to. Concrete design systems
-(e.g. Malevich) are **implementations** built on top of it that declare
-conformance.
+AINDF is a spec, not a component library. It describes how to write down your
+design system (tokens, components, slots and the rules between them) as JSON
+files that an AI agent can read and check its work against. You keep your own
+tokens, components and brand.
 
-> **AI-Native = a design system expressed as a graph of machine-readable
-> contracts, derived from a single source, and enforced automatically.**
-
-**Site:** https://aindf.oleg.design
+Website: https://aindf.oleg.design
 
 ## What's in this repo
 
-```
-SPEC.md       — the specification (ten sections, thesis → versioning)
-schemas/      — the six normative JSON Schemas (the contract graph)
-patterns/     — example conforming data (starter patterns)
-```
+- [`SPEC.md`](SPEC.md): the spec itself.
+- [`schemas/`](schemas): JSON Schemas for the files your design system
+  publishes: tokens, taxonomy, slots, applicability, presets and patterns.
+- [`patterns/starter.json`](patterns/starter.json): an example pattern for a
+  newsletter signup section.
 
-## The six principles
+The conformance validator and MCP server described in `SPEC.md` are not in this
+repo yet. For now you can check your files against the schemas.
 
-1. **Semantic, intent-based naming** — name by intent, not appearance.
-2. **Machine-readable contracts** — every relationship declared in a schema.
-3. **Closed, enforced choice space** — finite, lint-checkable combinations.
-4. **Slot + nesting contracts** — what nests where, declared via `accepts`.
-5. **One source, many generated outputs** — define once; generate the rest.
-6. **Agent-navigable surface + conformance** — MCP queries + a validator.
+## Getting started
 
-## The contract graph (four edges)
+1. Read [`SPEC.md`](SPEC.md). Sections 3 to 6 cover component layers, tokens,
+   modifiers, presets and patterns.
+2. Describe your design system in JSON files that follow the schemas.
+3. Check each file with any JSON Schema validator that supports draft 2020-12.
+   With Node installed, this checks the example pattern:
 
-| Edge | From → To | Schema |
-|---|---|---|
-| Token applicability | semantic token → property/context | `tokens` |
-| Slot content | slot → layer / contract | `slots` |
-| Modifier applicability | modifier → component / property (`when`) | `applicability` |
-| Preset / Pattern | composition → components + filled slots | `presets` / `patterns` |
+   ```sh
+   npx ajv-cli@5 validate --spec=draft2020 -s schemas/patterns.schema.json -d patterns/starter.json
+   ```
 
-## Composition stack
-
-`prompt` (intent) → `skill` (procedure) → `pattern` (parametrized recipe) →
-`preset` (bound instance) → `component` (primitive).
+   Swap in your own schema and data file.
 
 ## Status
 
-Draft **0.1** — co-evolving with its first reference implementation (Malevich).
-1.0 will not be tagged before a real implementation has proven the spec.
+Draft 0.1. The spec may still change before 1.0.
+
+## Contributing
+
+Open an issue or a pull request. If you change a schema, update `SPEC.md` and
+`patterns/starter.json` in the same pull request and run the check above.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT, see [LICENSE](LICENSE).
