@@ -42,7 +42,7 @@ The next release adds three tools that work together:
 - **MCP server.** Your AI agent looks up what your design system offers
   (components, slots, variants, tokens) through MCP instead of guessing.
 - **Validator.** Checks a screen config before it is built. It rejects unknown
-  components, slots or modifiers, one-off styles and code.
+  components, slots or modifiers, one-off styles and code inside the config.
 - **Builder.** Builds the screen from that config and a specific version of your
   design system. The agent edits the config, not HTML, CSS or JSX.
 
@@ -50,7 +50,7 @@ If your design system is missing something, the agent asks for it to be added
 instead of writing its own CSS.
 
 Why it matters: fix something once in the design system and every screen that
-uses it gets the fix.
+uses it should get the fix.
 
 To hear when v2 is out, watch this repo on GitHub: **Watch → Custom → Releases**.
 
