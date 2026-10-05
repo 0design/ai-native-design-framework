@@ -36,7 +36,7 @@ a retired rule keeps its ID. `test/rules.test.mjs` fails when the kit emits a co
 | AINDF-DS-27 | `DS_NOT_CONFORMANT` | bundle refused: the DS has conformance errors |
 | AINDF-DS-28 | `BUNDLE_INTEGRITY` | bundle bytes do not match bundleSha256 |
 | AINDF-DS-29 | `CORE_PIN` | the Core bundle is not the one pinned in ds.core (id@version) and ds.coreBundleSha256 (content) |
-| AINDF-DS-30 | `CORE_CONFORMANCE` | an Instance contract reusing a Core component name accepts less than the Core contract (a prop dropped, another type, required-ness changed, an enum value / binding / mark / inline component dropped, a tighter maxLength / item count / number range, another link pattern, a slot prop dropped) or adds a required prop |
+| AINDF-DS-30 | `CORE_CONFORMANCE` | an Instance contract reusing a Core component name accepts less than the Core contract (a prop dropped, another type, required-ness changed, an enum value / binding / mark / inline component dropped, a tighter maxLength / item count / number range, another link pattern, a slot prop dropped), moves the role (a template no longer a template, `routeParams` added, another taxonomy layer, a Core slot dropped or its cardinality tightened) or adds a required prop |
 
 ## SCR · Admission of a ScreenSpec (`validate-screen`, `aindf build`, trusted builder)
 

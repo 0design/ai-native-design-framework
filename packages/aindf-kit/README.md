@@ -19,7 +19,7 @@ The kit contains no design system (test: no QFactory strings in `src/`; `test/fi
 Limits: a builder receipt is not a signature; verified/accepted/released are never written by the kit; isolation of
 the author principal comes from deployment rights, not from this package.
 
-## Instance on Core (`ds.core` + `ds.coreBundle` + `ds.coreBundleSha256`, 0.2.0-pilot.2)
+## Instance on Core (`ds.core` + `ds.coreBundle` + `ds.coreBundleSha256`, 0.2.0-pilot.3)
 
 An Instance that extends a Core pins it in `aindf.config.json` three ways: `ds.core` (`id@version`), `ds.coreBundle`
 (path to that Core's AINDF bundle) and `ds.coreBundleSha256` (the bundle's content hash; a self-consistent bundle with the
@@ -31,10 +31,13 @@ accept every prop value the Core contract accepts —
 - every Core prop stays, with its type, required exactly where Core requires it;
 - every enum value, allowed binding, rich-text mark and inline component stays (the Instance may add more);
 - limits are no tighter: `maxLength`, `minItems`/`maxItems`, `minimum`/`maximum`; the link pattern is the Core one;
-- every Core slot prop stays; props the Core role does not have are optional.
+- every Core slot prop stays; props the Core role does not have are optional;
+- the role keeps its place in a screen: a Core template stays a template, `routeParams` is not added, the taxonomy layer
+  is the Core one, every Core slot exists with a cardinality no tighter.
 
-What this guarantees: the **props** a screen sets for a Core role admit against the Instance unchanged. What fills a slot
-is judged by the Instance's own slotsets (its accepted components are Instance components).
+What this guarantees: a screen written for a Core role — its props, where it stands, which slots it fills and how many
+children — admits against the Instance unchanged. What a slot accepts is judged by the Instance's own slotsets (its
+accepted components are Instance components).
 
-Codes: `CORE_PIN` (AINDF-DS-29) when the bundle is not the pinned one; `CORE_CONFORMANCE` (AINDF-DS-30) per narrowed prop
-or dropped slot. Without `ds.coreBundle` nothing changes.
+Codes: `CORE_PIN` (AINDF-DS-29) when the bundle is not the pinned one; `CORE_CONFORMANCE` (AINDF-DS-30) per narrowed prop,
+moved role or narrowed slot. Without `ds.coreBundle` nothing changes.

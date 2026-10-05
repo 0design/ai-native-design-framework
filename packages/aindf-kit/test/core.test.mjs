@@ -99,3 +99,41 @@ test('the kit reports its package version (receipts and the MCP)', async () => {
   const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
   assert.equal(KIT_VERSION, pkg.version);
 });
+
+// review of #2 (G4): the role's place in a screen — each negative is one a Core screen would hit on admission
+// (NOT_A_TEMPLATE, ROUTE_PARAMS_UNAVAILABLE, LAYER_MISMATCH, UNKNOWN_SLOT, SLOT_CARDINALITY) while checkDs stayed silent
+const placement = () => ({ components: structuredClone(core.sources.components), taxonomy: structuredClone(core.sources.taxonomy), slots: structuredClone(core.sources.slots) });
+const placementCodes = ({ components, taxonomy, slots }) => coreConformance(instanceConfig, components, core, { taxonomy, slots }).map(e => `${e.code} ${e.path}`);
+
+test('[AINDF-DS-30] placement kept: same template/routeParams/layer/slots, or a looser slot cardinality, conforms', () => {
+  assert.deepEqual(placementCodes(placement()), []);
+  const p = placement();
+  p.slots.slotsets.find(s => s.component === 'Hero').slots.find(s => s.name === 'title').cardinality = '0..*';
+  assert.deepEqual(placementCodes(p), []);
+});
+
+test('[AINDF-DS-30] placement negatives: template dropped, routeParams added, another layer, a Core slot dropped, a tighter cardinality', () => {
+  const cases = [
+    ['template dropped', p => { delete p.components.components.find(c => c.name === 'Page').template; }, 'CORE_CONFORMANCE components.Page.template'],
+    ['routeParams added', p => { p.components.components.find(c => c.name === 'Hero').routeParams = true; }, 'CORE_CONFORMANCE components.Hero.routeParams'],
+    ['another layer', p => { p.taxonomy.components.find(c => c.name === 'Hero').layer = 'blocks'; }, 'CORE_CONFORMANCE taxonomy.Hero.layer'],
+    ['Core slot dropped', p => { const h = p.slots.slotsets.find(s => s.component === 'Hero'); h.slots = h.slots.filter(s => s.name !== 'actions'); }, 'CORE_CONFORMANCE slots.Hero.actions'],
+    ['min cardinality raised', p => { p.slots.slotsets.find(s => s.component === 'Hero').slots.find(s => s.name === 'actions').cardinality = '1..*'; }, 'CORE_CONFORMANCE slots.Hero.actions'],
+    ['max cardinality lowered', p => { p.slots.slotsets.find(s => s.component === 'Hero').slots.find(s => s.name === 'actions').cardinality = '0..2'; }, 'CORE_CONFORMANCE slots.Hero.actions'],
+  ];
+  for (const [why, mutate, want] of cases) { const p = placement(); mutate(p); assert.deepEqual(placementCodes(p), [want], why); }
+});
+
+test('[AINDF-DS-30] end to end: checkDs passes the Instance taxonomy and slots, so a moved layer fails CORE_CONFORMANCE', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'aindf-core-g4-'));
+  try {
+    cpSync(tiny, dir, { recursive: true });
+    writeFileSync(join(dir, 'core.bundle.json'), JSON.stringify(core));
+    const cfg = JSON.parse(readFileSync(join(dir, 'aindf.config.json'), 'utf8'));
+    writeFileSync(join(dir, 'aindf.config.json'), JSON.stringify({ ...cfg, ds: { id: 'inst', version: '0.1.0', core: pin, coreBundle: 'core.bundle.json', coreBundleSha256: core.bundleSha256 } }));
+    const p = placement();
+    delete p.components.components.find(c => c.name === 'Page').template;
+    writeFileSync(join(dir, 'components.json'), JSON.stringify(p.components));
+    assert.ok(checkDs(loadDs(join(dir, 'aindf.config.json'))).some(e => e.code === 'CORE_CONFORMANCE' && e.path === 'components.Page.template'));
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
