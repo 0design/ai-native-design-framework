@@ -1,0 +1,1 @@
+{ "aindfVersion": "0.1", "presets": [ { "name": "hero-basic", "builtOn": "Hero", "slots": { "title": [ { "component": "Heading", "props": { "text": "Hi" } } ] } } ] }

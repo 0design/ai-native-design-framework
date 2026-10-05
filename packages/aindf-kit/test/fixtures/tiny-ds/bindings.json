@@ -1,0 +1,1 @@
+{ "aindfVersion": "0.2", "bindings": [ { "name": "signup", "kind": "action", "description": "open signup" } ] }

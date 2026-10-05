@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aindf.oleg.design/schemas/0.2/screen.schema.json",
+  "title": "AINDF ScreenSpec",
+  "description": "The only artifact a screen author writes. Pinned to one immutable DS bundle; a template plus ordered sections composed from declared components with declared props and slots. No markup, styles or code.",
+  "type": "object",
+  "required": [
+    "kind",
+    "aindfVersion",
+    "ds",
+    "route",
+    "template",
+    "sections"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "kind": {
+      "const": "aindf.screen"
+    },
+    "aindfVersion": {
+      "const": "0.2"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+    },
+    "ds": {
+      "type": "object",
+      "required": [
+        "id",
+        "version",
+        "bundleSha256"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "bundleSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "route": {
+      "type": "string",
+      "pattern": "^/(?:(?:[a-z0-9-]+|\\[[a-z]+\\])(?:/(?:[a-z0-9-]+|\\[[a-z]+\\]))*)?$",
+      "description": "App route; [param] segments require `params`"
+    },
+    "template": {
+      "$ref": "#/$defs/node"
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/node"
+      }
+    },
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/metaValue"
+        },
+        "description": {
+          "$ref": "#/$defs/metaValue"
+        }
+      },
+      "description": "document metadata: literal text or a data binding"
+    },
+    "params": {
+      "type": "object",
+      "required": [
+        "binding"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "binding": {
+          "type": "string"
+        },
+        "dynamicParams": {
+          "type": "boolean"
+        }
+      },
+      "description": "route parameters come only from a DS `params` binding (static generation)"
+    }
+  },
+  "$defs": {
+    "node": {
+      "type": "object",
+      "required": [
+        "component"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "component": {
+          "type": "string"
+        },
+        "props": {
+          "type": "object"
+        },
+        "slots": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/node"
+            }
+          }
+        }
+      }
+    },
+    "metaValue": {
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        {
+          "type": "object",
+          "required": [
+            "binding"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "binding": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

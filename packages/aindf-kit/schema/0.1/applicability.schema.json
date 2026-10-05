@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aindf.oleg.design/schemas/applicability.schema.json",
+  "title": "AINDF Applicability",
+  "description": "Two cross-cutting edge types: modifier -> target, and token-family -> valid properties. AINDF fixes the mechanism; the modifier category vocabulary is declared by the system.",
+  "type": "object",
+  "required": ["aindfVersion"],
+  "additionalProperties": false,
+  "properties": {
+    "aindfVersion": { "type": "string" },
+    "modifierCategories": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "modifier category vocabulary declared by the system"
+    },
+    "modifiers": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/modifierRule" }
+    },
+    "tokens": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/tokenRule" }
+    }
+  },
+  "$defs": {
+    "modifierRule": {
+      "type": "object",
+      "required": ["category", "appliesTo"],
+      "additionalProperties": false,
+      "properties": {
+        "category": { "type": "string" },
+        "values": { "type": "array", "items": { "type": "string" } },
+        "appliesTo": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": false,
+          "properties": {
+            "layers": {
+              "type": "array",
+              "items": { "enum": ["atoms", "elements", "blocks", "sections"] }
+            },
+            "roles": { "type": "array", "items": { "type": "string" } },
+            "components": { "type": "array", "items": { "type": "string" } },
+            "when": { "type": "object", "additionalProperties": { "type": "array", "items": { "type": "string" } }, "description": "property -> allowed values, e.g. {\"interaction\":[\"link\",\"button\"]}. Gates the modifier by component property; a component set to a value outside this set rejects the modifier (lint)." }
+          }
+        }
+      }
+    },
+    "tokenRule": {
+      "type": "object",
+      "required": ["family", "validProperties"],
+      "additionalProperties": false,
+      "properties": {
+        "family": { "type": "string", "description": "token name prefix, e.g. color, surface, font" },
+        "validProperties": { "type": "array", "items": { "type": "string" } },
+        "invalidAs": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

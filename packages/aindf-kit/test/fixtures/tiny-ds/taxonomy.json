@@ -1,0 +1,46 @@
+{
+ "aindfVersion": "0.1",
+ "roles": [
+  "layout",
+  "display",
+  "interactive"
+ ],
+ "components": [
+  {
+   "name": "Page",
+   "layer": "sections",
+   "role": "layout",
+   "renderTargets": [
+    "inline"
+   ],
+   "hasSlots": true
+  },
+  {
+   "name": "Hero",
+   "layer": "sections",
+   "role": "display",
+   "renderTargets": [
+    "inline"
+   ],
+   "hasSlots": true
+  },
+  {
+   "name": "Heading",
+   "layer": "elements",
+   "role": "display",
+   "renderTargets": [
+    "inline"
+   ],
+   "hasSlots": false
+  },
+  {
+   "name": "Cta",
+   "layer": "elements",
+   "role": "interactive",
+   "renderTargets": [
+    "inline"
+   ],
+   "hasSlots": false
+  }
+ ]
+}
