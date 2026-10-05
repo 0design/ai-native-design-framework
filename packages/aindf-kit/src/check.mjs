@@ -68,24 +68,31 @@ export function checkDs({ config, sources, core }) {
     }
   }
   if (config.conformsTo !== 'aindf@0.2') err('CONFORMS_TO', 'config', config.conformsTo);
-  if (core) for (const e of coreConformance(config, components, core)) err(e.code, e.path, e.message);
+  if (core) for (const e of coreConformance(config, components, core, { taxonomy, slots })) err(e.code, e.path, e.message);
   return errors;
 }
 
 /** Instance on Core (AINDF-DS-29/30): an Instance contract that reuses a Core component name accepts every prop value the
  *  Core contract accepts — every Core prop with its type, required exactly where Core requires it, every enum value, every
  *  allowed binding, mark and inline component, limits no tighter (maxLength, item counts, number range), the same link
- *  pattern — keeps every Core slot prop and adds only optional props. So the props a screen sets for the Core role admit
- *  against the Instance unchanged; slot contents are judged by the Instance's own slotsets. The bundle must be the one
- *  pinned in ds.core (and, on load, ds.coreBundleSha256). */
+ *  pattern — keeps every Core slot prop and adds only optional props. It also keeps the role's place in a screen: a Core
+ *  template stays a template, routeParams is not added, the taxonomy layer is the Core one, every Core slot exists with a
+ *  cardinality no tighter. So a screen written for the Core role admits against the Instance unchanged; what a slot
+ *  accepts is judged by the Instance's own slotsets. The bundle must be the one pinned in ds.core (and, on load,
+ *  ds.coreBundleSha256). */
 const MAX_TEXT = 2000, MAX_ITEMS = 50;
-export function coreConformance(config, components, core) {
+export function coreConformance(config, components, core, { taxonomy, slots } = {}) {
   const out = [];
   const fail = (code, path, message) => out.push({ code, path, message });
   const pinned = `${core.ds.id}@${core.ds.version}`;
   if (config.ds.core !== pinned) { fail('CORE_PIN', 'config.ds.coreBundle', `bundle is ${pinned}, ds.core is ${config.ds.core ?? 'unset'}`); return out; }
   const coreContracts = new Map(core.sources.components.components.map(c => [c.name, c]));
   const missing = (base, mine) => (base ?? []).filter(v => !(mine ?? []).includes(v));
+  const coreLayers = new Map((core.sources.taxonomy?.components ?? []).map(c => [c.name, c.layer]));
+  const layers = new Map((taxonomy?.components ?? []).map(c => [c.name, c.layer]));
+  const coreSlots = new Map((core.sources.slots?.slotsets ?? []).map(s => [s.component, s.slots]));
+  const ownSlots = new Map((slots?.slotsets ?? []).map(s => [s.component, s.slots]));
+  const range = card => card.split('..').map(x => x === '*' ? Infinity : Number(x));
   for (const c of components.components) {
     const base = coreContracts.get(c.name);
     if (!base) continue;
@@ -107,6 +114,17 @@ export function coreConformance(config, components, core) {
     }
     for (const [p, def] of Object.entries(c.props)) if (!(p in base.props) && def.required) fail('CORE_CONFORMANCE', `${at}.props.${p}`, 'a prop the Core role does not have must be optional');
     for (const slot of Object.keys(base.slotProps ?? {})) if (!(slot in (c.slotProps ?? {}))) fail('CORE_CONFORMANCE', `${at}.slotProps.${slot}`, `Core ${pinned} declares this slot`);
+    // review of #2 (G4): where a screen may place the role — admission fails NOT_A_TEMPLATE, ROUTE_PARAMS_UNAVAILABLE,
+    // LAYER_MISMATCH, UNKNOWN_SLOT or SLOT_CARDINALITY on a Core screen otherwise
+    if (base.template && !c.template) fail('CORE_CONFORMANCE', `${at}.template`, 'a Core template must stay a template');
+    if (c.routeParams && !base.routeParams) fail('CORE_CONFORMANCE', `${at}.routeParams`, 'Core screens may place it on a route without [param]');
+    if (layers.has(c.name) && layers.get(c.name) !== coreLayers.get(c.name)) fail('CORE_CONFORMANCE', `taxonomy.${c.name}.layer`, `layer ${layers.get(c.name)}, Core has ${coreLayers.get(c.name)}`);
+    if (slots) for (const def of coreSlots.get(c.name) ?? []) {
+      const mine = (ownSlots.get(c.name) ?? []).find(s => s.name === def.name), sat = `slots.${c.name}.${def.name}`;
+      if (!mine) { fail('CORE_CONFORMANCE', sat, `Core ${pinned} declares this slot`); continue; }
+      const [min, max] = range(def.cardinality), [myMin, myMax] = range(mine.cardinality);
+      if (myMin > min || myMax < max) fail('CORE_CONFORMANCE', sat, `cardinality ${mine.cardinality} is tighter than Core ${def.cardinality}`);
+    }
   }
   return out;
 }
