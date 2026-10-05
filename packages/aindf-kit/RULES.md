@@ -35,6 +35,8 @@ a retired rule keeps its ID. `test/rules.test.mjs` fails when the kit emits a co
 | AINDF-DS-26 | `TOKEN_DIRECTION` | token references upward (tiers reference downward only) |
 | AINDF-DS-27 | `DS_NOT_CONFORMANT` | bundle refused: the DS has conformance errors |
 | AINDF-DS-28 | `BUNDLE_INTEGRITY` | bundle bytes do not match bundleSha256 |
+| AINDF-DS-29 | `CORE_PIN` | ds.coreBundle is not the Core the Instance pins in ds.core (id@version) |
+| AINDF-DS-30 | `CORE_CONFORMANCE` | an Instance contract reusing a Core component name drops a Core prop, changes its type or required-ness, drops a Core enum value or slot prop, or adds a required prop |
 
 ## SCR · Admission of a ScreenSpec (`validate-screen`, `aindf build`, trusted builder)
 

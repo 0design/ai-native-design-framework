@@ -1,6 +1,6 @@
 export { validateSchema } from './schema.mjs';
 export { loadDs, readSchema } from './load.mjs';
-export { checkDs } from './check.mjs';
+export { checkDs, coreConformance } from './check.mjs';
 export { createBundle, verifyBundle, bundlePin } from './bundle.mjs';
 export { admitScreen } from './admit.mjs';
 export { generateNextPage, pageFileForRoute, GENERATED_MARK } from './codegen-next.mjs';

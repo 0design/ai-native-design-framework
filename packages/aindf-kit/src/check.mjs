@@ -4,7 +4,7 @@ const LAYERS = ['atoms', 'elements', 'blocks', 'sections'];
 const SOURCE_SCHEMAS = { tokens: '0.1/tokens.schema.json', taxonomy: '0.1/taxonomy.schema.json', slots: '0.1/slots.schema.json', applicability: '0.1/applicability.schema.json', presets: '0.1/presets.schema.json', patterns: '0.1/patterns.schema.json', components: '0.2/components.schema.json', bindings: '0.2/bindings.schema.json' };
 const TOKEN_TARGETS = { foundations: [], semantic: ['foundations', 'semantic'], component: ['foundations', 'semantic', 'component'] };
 /** AINDF 0.2 conformance of a loaded DS. Returns stable-coded errors; empty array means conformant. */
-export function checkDs({ config, sources }) {
+export function checkDs({ config, sources, core }) {
   const errors = [];
   const err = (code, path, message) => errors.push({ code, path, message });
   for (const [name, source] of Object.entries(sources))
@@ -68,5 +68,34 @@ export function checkDs({ config, sources }) {
     }
   }
   if (config.conformsTo !== 'aindf@0.2') err('CONFORMS_TO', 'config', config.conformsTo);
+  if (core) for (const e of coreConformance(config, components, core)) err(e.code, e.path, e.message);
   return errors;
+}
+
+/** Instance on Core (AINDF-DS-29/30): an Instance contract that reuses a Core component name keeps the Core contract —
+ *  every Core prop with its type, required where Core requires it, every Core enum value, every Core slot prop — and adds
+ *  only optional props, so a screen written for the Core role admits against the Instance unchanged. The Core bundle must
+ *  be the one the Instance pins in ds.core. */
+export function coreConformance(config, components, core) {
+  const out = [];
+  const fail = (code, path, message) => out.push({ code, path, message });
+  const pinned = `${core.ds.id}@${core.ds.version}`;
+  if (config.ds.core !== pinned) { fail('CORE_PIN', 'config.ds.coreBundle', `bundle is ${pinned}, ds.core is ${config.ds.core ?? 'unset'}`); return out; }
+  const coreContracts = new Map(core.sources.components.components.map(c => [c.name, c]));
+  for (const c of components.components) {
+    const base = coreContracts.get(c.name);
+    if (!base) continue;
+    const at = `components.${c.name}`;
+    for (const [p, def] of Object.entries(base.props)) {
+      const mine = c.props[p];
+      if (!mine) { fail('CORE_CONFORMANCE', `${at}.props.${p}`, `Core ${pinned} declares ${p}; the Instance contract must keep it`); continue; }
+      if (mine.type !== def.type) fail('CORE_CONFORMANCE', `${at}.props.${p}`, `type ${mine.type}, Core has ${def.type}`);
+      if (def.required && !mine.required) fail('CORE_CONFORMANCE', `${at}.props.${p}`, 'Core requires it; the Instance must too');
+      if (!def.required && mine.required) fail('CORE_CONFORMANCE', `${at}.props.${p}`, 'optional in Core; a screen written for Core may omit it');
+      if (def.type === 'enum') for (const v of def.values ?? []) if (!(mine.values ?? []).includes(v)) fail('CORE_CONFORMANCE', `${at}.props.${p}`, `Core value ${v} is missing`);
+    }
+    for (const [p, def] of Object.entries(c.props)) if (!(p in base.props) && def.required) fail('CORE_CONFORMANCE', `${at}.props.${p}`, 'a prop the Core role does not have must be optional');
+    for (const slot of Object.keys(base.slotProps ?? {})) if (!(slot in (c.slotProps ?? {}))) fail('CORE_CONFORMANCE', `${at}.slotProps.${slot}`, `Core ${pinned} declares this slot`);
+  }
+  return out;
 }
