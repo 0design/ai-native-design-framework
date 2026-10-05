@@ -19,7 +19,7 @@ The kit contains no design system (test: no QFactory strings in `src/`; `test/fi
 Limits: a builder receipt is not a signature; verified/accepted/released are never written by the kit; isolation of
 the author principal comes from deployment rights, not from this package.
 
-## Instance on Core (`ds.core` + `ds.coreBundle` + `ds.coreBundleSha256`, 0.2.0-pilot.4)
+## Instance on Core (`ds.core` + `ds.coreBundle` + `ds.coreBundleSha256`, 0.2.0-pilot.5)
 
 An Instance that extends a Core pins it in `aindf.config.json` three ways: `ds.core` (`id@version`), `ds.coreBundle`
 (path to that Core's AINDF bundle) and `ds.coreBundleSha256` (the bundle's content hash; a self-consistent bundle with the
@@ -35,15 +35,16 @@ accept every prop value the Core contract accepts —
 - the role keeps its place in a screen: a Core template stays a template, `routeParams` is not added, the taxonomy layer
   is the Core one, every Core slot exists with a cardinality no tighter; slots the Core role does not have are optional
   (min 0);
-- every Core component exists in the Instance (contract and taxonomy), every Core binding with the same kind.
+- every Core component exists in the Instance (contract and taxonomy), every Core binding by name; a `params` or `data`
+  binding keeps its kind (a screen uses it as `$.params` / `$.meta`), an `action` binding may change kind (props name it).
 
 What this guarantees: a screen written for Core — its components, props, where they stand, which slots they fill and how
 many children, its bindings — admits against the Instance unchanged, with one exception on purpose: what a slot
 *accepts* is judged by the Instance's own slotsets (their accepted components are Instance components), so a narrower
 `accepts` can still reject a Core screen with `SLOT_REJECTS`. That is not checked here.
 
-`coreConformance(config, components, core, { taxonomy, slots, bindings })`: props, `template`, `routeParams` and the
-Core component list are checked from `components` alone; the taxonomy layer and presence, slots and bindings only when
+`coreConformance(config, components, core, { taxonomy, slots, bindings })`: props, `slotProps`, `template`, `routeParams` and
+the Core component list are checked from `components` alone; the taxonomy layer and presence, slots and bindings only when
 that source is passed. `checkDs` passes all of them.
 
 Codes: `CORE_PIN` (AINDF-DS-29) when the bundle is not the pinned one; `CORE_CONFORMANCE` (AINDF-DS-30) per narrowed prop,

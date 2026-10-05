@@ -78,13 +78,14 @@ export function checkDs({ config, sources, core }) {
  *  pattern — keeps every Core slot prop and adds only optional props. It also keeps the role's place in a screen: a Core
  *  template stays a template, routeParams is not added, the taxonomy layer is the Core one, every Core slot exists with a
  *  cardinality no tighter and every slot the Instance adds is optional (min 0). Every Core component and every Core binding
- *  (with its kind) exists in the Instance. So a screen written for Core admits against the Instance unchanged — except
+ *  exists in the Instance, a params or data binding with the same kind (screens use those kinds; an action binding is
+ *  matched by name only). So a screen written for Core admits against the Instance unchanged — except
  *  what a slot accepts: that is judged by the Instance's own slotsets, and a narrower `accepts` can still reject a Core
- *  screen (SLOT_REJECTS) — deliberately not checked here. template, routeParams and the Core component list are checked
+ *  screen (SLOT_REJECTS) — deliberately not checked here. Props, slotProps, template, routeParams and the Core component list are checked
  *  from `components`; layer and the Core component list in the taxonomy need `taxonomy`, slots need `slots`, bindings need
  *  `bindings` (checkDs passes all three). The bundle must be the one pinned in ds.core (and, on load,
  *  ds.coreBundleSha256). */
-const MAX_TEXT = 2000, MAX_ITEMS = 50;
+const MAX_TEXT = 2000, MAX_ITEMS = 50, SCREEN_KINDS = ['params', 'data'];
 export function coreConformance(config, components, core, { taxonomy, slots, bindings } = {}) {
   const out = [];
   const fail = (code, path, message) => out.push({ code, path, message });
@@ -106,8 +107,12 @@ export function coreConformance(config, components, core, { taxonomy, slots, bin
   }
   if (bindings) {
     const kinds = new Map(bindings.bindings.map(b => [b.name, b.kind]));
-    for (const b of core.sources.bindings?.bindings ?? [])
-      if (kinds.get(b.name) !== b.kind) fail('CORE_CONFORMANCE', `bindings.${b.name}`, kinds.has(b.name) ? `kind ${kinds.get(b.name)}, Core has ${b.kind}` : `Core ${pinned} declares this binding (${b.kind})`);
+    // review of #4 (G8): admission reads the kind only for $.params (params) and $.meta (data); a binding a prop names is
+    // matched by name, so an action binding may change kind
+    for (const b of core.sources.bindings?.bindings ?? []) {
+      if (!kinds.has(b.name)) fail('CORE_CONFORMANCE', `bindings.${b.name}`, `Core ${pinned} declares this binding (${b.kind})`);
+      else if (SCREEN_KINDS.includes(b.kind) && kinds.get(b.name) !== b.kind) fail('CORE_CONFORMANCE', `bindings.${b.name}`, `kind ${kinds.get(b.name)}, Core has ${b.kind} (screens use it as ${b.kind === 'params' ? '$.params' : '$.meta'})`);
+    }
   }
   for (const c of components.components) {
     const base = coreContracts.get(c.name);

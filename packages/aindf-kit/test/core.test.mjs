@@ -124,7 +124,7 @@ test('[AINDF-DS-30] placement negatives: template dropped, routeParams added, an
   for (const [why, mutate, want] of cases) { const p = placement(); mutate(p); assert.deepEqual(placementCodes(p), [want], why); }
 });
 
-test('[AINDF-DS-30] end to end: checkDs passes the Instance components, taxonomy, slots and bindings — each kind of change fails CORE_CONFORMANCE via loadDs', () => {
+test('[AINDF-DS-30] end to end: checkDs passes the Instance components, taxonomy, slots and bindings — a change in each fails CORE_CONFORMANCE via loadDs', () => {
   const dir = mkdtempSync(join(tmpdir(), 'aindf-core-g4-'));
   try {
     cpSync(tiny, dir, { recursive: true });
@@ -136,7 +136,7 @@ test('[AINDF-DS-30] end to end: checkDs passes the Instance components, taxonomy
       ['template dropped', 'components', j => { delete j.components.find(c => c.name === 'Page').template; }, 'components.Page.template'],
       ['another layer', 'taxonomy', j => { j.components.find(c => c.name === 'Heading').layer = 'atoms'; }, 'taxonomy.Heading.layer'],
       ['new required slot', 'slots', j => { j.slotsets.find(s => s.component === 'Hero').slots.push({ name: 'media', accepts: { layers: ['elements'] }, cardinality: '1..1' }); }, 'slots.Hero.media'],
-      ['binding kind changed', 'bindings', j => { j.bindings.find(b => b.name === 'signup').kind = 'data'; }, 'bindings.signup'],
+      ['binding dropped', 'bindings', j => { j.bindings = j.bindings.filter(b => b.name !== 'signup'); }, 'bindings.signup'],
     ];
     for (const [why, file, mutate, path] of cases) {
       for (const [f, text] of Object.entries(original)) writeFileSync(join(dir, `${f}.json`), text);
@@ -158,7 +158,7 @@ test('[AINDF-DS-30] new slots: an optional new slot conforms; a required one fai
   assert.deepEqual(placementCodes(p), ['CORE_CONFORMANCE slots.Hero.media']);
 });
 
-test('[AINDF-DS-30] Core components and bindings: an added component or binding conforms; a dropped one, or a binding of another kind, fails', () => {
+test('[AINDF-DS-30] Core components and bindings: an added component or binding conforms; a dropped one fails', () => {
   const p = placement();
   p.bindings.bindings.push({ name: 'extra', kind: 'action', description: 'x' });
   assert.deepEqual(placementCodes(p), []);
@@ -166,12 +166,20 @@ test('[AINDF-DS-30] Core components and bindings: an added component or binding 
     ['component dropped', p => { p.components.components = p.components.components.filter(c => c.name !== 'Cta'); }, ['CORE_CONFORMANCE components.Cta']],
     ['component dropped from taxonomy', p => { p.taxonomy.components = p.taxonomy.components.filter(c => c.name !== 'Cta'); }, ['CORE_CONFORMANCE taxonomy.Cta']],
     ['binding dropped', p => { p.bindings.bindings = []; }, ['CORE_CONFORMANCE bindings.signup']],
-    ['binding kind changed', p => { p.bindings.bindings[0].kind = 'params'; }, ['CORE_CONFORMANCE bindings.signup']],
   ];
   for (const [why, mutate, want] of cases) { const q = placement(); mutate(q); assert.deepEqual(placementCodes(q), want, why); }
-  const said = mutate => { const q = placement(); mutate(q); return coreConformance(instanceConfig, q.components, core, q).map(e => e.message).join(); };
-  assert.match(said(q => { q.bindings.bindings = []; }), /declares this binding/);
-  assert.match(said(q => { q.bindings.bindings[0].kind = 'params'; }), /kind params, Core has action/);
+});
+
+// review of #4 (G8): admission reads a binding's kind only for $.params (params) and $.meta (data)
+test('[AINDF-DS-30] binding kinds: a params or data binding keeps its kind; an action binding (named by props) may change it', () => {
+  const kinded = { ...core, sources: { ...core.sources, bindings: { aindfVersion: '0.2', bindings: [
+    { name: 'signup', kind: 'action', description: 'open signup' }, { name: 'slug', kind: 'params', description: 'route' }, { name: 'page', kind: 'data', description: 'meta' }] } } };
+  const run = mutate => { const p = placement(); p.bindings = structuredClone(kinded.sources.bindings); mutate(p.bindings.bindings); return coreConformance(instanceConfig, p.components, kinded, p).map(e => `${e.path} ${e.message}`); };
+  assert.deepEqual(run(() => {}), []);
+  assert.deepEqual(run(bs => { bs[0].kind = 'data'; }), [], 'action -> data: props match by name');
+  assert.deepEqual(run(bs => { bs[1].kind = 'data'; }), ['bindings.slug kind data, Core has params (screens use it as $.params)']);
+  assert.deepEqual(run(bs => { bs[2].kind = 'action'; }), ['bindings.page kind action, Core has data (screens use it as $.meta)']);
+  assert.match(run(bs => { bs.splice(1, 1); }).join(), /bindings\.slug Core .* declares this binding \(params\)/);
 });
 
 test('[AINDF-DS-30] without the 4th argument: props, template, routeParams and the Core component list are still checked; layer, slots and bindings are not', () => {
