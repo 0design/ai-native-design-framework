@@ -102,8 +102,8 @@ test('the kit reports its package version (receipts and the MCP)', async () => {
 
 // review of #2 (G4): the role's place in a screen — each negative is one a Core screen would hit on admission
 // (NOT_A_TEMPLATE, ROUTE_PARAMS_UNAVAILABLE, LAYER_MISMATCH, UNKNOWN_SLOT, SLOT_CARDINALITY) while checkDs stayed silent
-const placement = () => ({ components: structuredClone(core.sources.components), taxonomy: structuredClone(core.sources.taxonomy), slots: structuredClone(core.sources.slots) });
-const placementCodes = ({ components, taxonomy, slots }) => coreConformance(instanceConfig, components, core, { taxonomy, slots }).map(e => `${e.code} ${e.path}`);
+const placement = () => ({ components: structuredClone(core.sources.components), taxonomy: structuredClone(core.sources.taxonomy), slots: structuredClone(core.sources.slots), bindings: structuredClone(core.sources.bindings) });
+const placementCodes = ({ components, taxonomy, slots, bindings }) => coreConformance(instanceConfig, components, core, { taxonomy, slots, bindings }).map(e => `${e.code} ${e.path}`);
 
 test('[AINDF-DS-30] placement kept: same template/routeParams/layer/slots, or a looser slot cardinality, conforms', () => {
   assert.deepEqual(placementCodes(placement()), []);
@@ -124,16 +124,64 @@ test('[AINDF-DS-30] placement negatives: template dropped, routeParams added, an
   for (const [why, mutate, want] of cases) { const p = placement(); mutate(p); assert.deepEqual(placementCodes(p), [want], why); }
 });
 
-test('[AINDF-DS-30] end to end: checkDs passes the Instance taxonomy and slots, so a moved layer fails CORE_CONFORMANCE', () => {
+test('[AINDF-DS-30] end to end: checkDs passes the Instance components, taxonomy, slots and bindings — each kind of change fails CORE_CONFORMANCE via loadDs', () => {
   const dir = mkdtempSync(join(tmpdir(), 'aindf-core-g4-'));
   try {
     cpSync(tiny, dir, { recursive: true });
     writeFileSync(join(dir, 'core.bundle.json'), JSON.stringify(core));
     const cfg = JSON.parse(readFileSync(join(dir, 'aindf.config.json'), 'utf8'));
     writeFileSync(join(dir, 'aindf.config.json'), JSON.stringify({ ...cfg, ds: { id: 'inst', version: '0.1.0', core: pin, coreBundle: 'core.bundle.json', coreBundleSha256: core.bundleSha256 } }));
-    const p = placement();
-    delete p.components.components.find(c => c.name === 'Page').template;
-    writeFileSync(join(dir, 'components.json'), JSON.stringify(p.components));
-    assert.ok(checkDs(loadDs(join(dir, 'aindf.config.json'))).some(e => e.code === 'CORE_CONFORMANCE' && e.path === 'components.Page.template'));
+    const original = Object.fromEntries(['components', 'taxonomy', 'slots', 'bindings'].map(f => [f, readFileSync(join(dir, `${f}.json`), 'utf8')]));
+    const cases = [
+      ['template dropped', 'components', j => { delete j.components.find(c => c.name === 'Page').template; }, 'components.Page.template'],
+      ['another layer', 'taxonomy', j => { j.components.find(c => c.name === 'Heading').layer = 'atoms'; }, 'taxonomy.Heading.layer'],
+      ['new required slot', 'slots', j => { j.slotsets.find(s => s.component === 'Hero').slots.push({ name: 'media', accepts: { layers: ['elements'] }, cardinality: '1..1' }); }, 'slots.Hero.media'],
+      ['binding kind changed', 'bindings', j => { j.bindings.find(b => b.name === 'signup').kind = 'data'; }, 'bindings.signup'],
+    ];
+    for (const [why, file, mutate, path] of cases) {
+      for (const [f, text] of Object.entries(original)) writeFileSync(join(dir, `${f}.json`), text);
+      const j = JSON.parse(original[file]); mutate(j); writeFileSync(join(dir, `${file}.json`), JSON.stringify(j));
+      const errs = checkDs(loadDs(join(dir, 'aindf.config.json')));
+      assert.ok(errs.some(e => e.code === 'CORE_CONFORMANCE' && e.path === path), `${why}: ${errs.map(e => `${e.code} ${e.path}`)}`);
+    }
   } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+// review of #3 (G5/G6/G7): each negative is one a Core screen would hit on admission (SLOT_CARDINALITY, UNKNOWN_COMPONENT,
+// UNKNOWN_BINDING) while checkDs stayed silent
+test('[AINDF-DS-30] new slots: an optional new slot conforms; a required one fails', () => {
+  const p = placement();
+  const hero = p.slots.slotsets.find(s => s.component === 'Hero').slots;
+  hero.push({ name: 'media', accepts: { layers: ['elements'] }, cardinality: '0..1' });
+  assert.deepEqual(placementCodes(p), []);
+  hero.at(-1).cardinality = '1..*';
+  assert.deepEqual(placementCodes(p), ['CORE_CONFORMANCE slots.Hero.media']);
+});
+
+test('[AINDF-DS-30] Core components and bindings: an added component or binding conforms; a dropped one, or a binding of another kind, fails', () => {
+  const p = placement();
+  p.bindings.bindings.push({ name: 'extra', kind: 'action', description: 'x' });
+  assert.deepEqual(placementCodes(p), []);
+  const cases = [
+    ['component dropped', p => { p.components.components = p.components.components.filter(c => c.name !== 'Cta'); }, ['CORE_CONFORMANCE components.Cta']],
+    ['component dropped from taxonomy', p => { p.taxonomy.components = p.taxonomy.components.filter(c => c.name !== 'Cta'); }, ['CORE_CONFORMANCE taxonomy.Cta']],
+    ['binding dropped', p => { p.bindings.bindings = []; }, ['CORE_CONFORMANCE bindings.signup']],
+    ['binding kind changed', p => { p.bindings.bindings[0].kind = 'params'; }, ['CORE_CONFORMANCE bindings.signup']],
+  ];
+  for (const [why, mutate, want] of cases) { const q = placement(); mutate(q); assert.deepEqual(placementCodes(q), want, why); }
+  const said = mutate => { const q = placement(); mutate(q); return coreConformance(instanceConfig, q.components, core, q).map(e => e.message).join(); };
+  assert.match(said(q => { q.bindings.bindings = []; }), /declares this binding/);
+  assert.match(said(q => { q.bindings.bindings[0].kind = 'params'; }), /kind params, Core has action/);
+});
+
+test('[AINDF-DS-30] without the 4th argument: props, template, routeParams and the Core component list are still checked; layer, slots and bindings are not', () => {
+  const p = placement();
+  delete p.components.components.find(c => c.name === 'Page').template;
+  p.components.components.find(c => c.name === 'Hero').routeParams = true;
+  p.components.components = p.components.components.filter(c => c.name !== 'Cta');
+  assert.deepEqual(coreConformance(instanceConfig, p.components, core).map(e => e.path).sort(), ['components.Cta', 'components.Hero.routeParams', 'components.Page.template']);
+  const q = placement();
+  q.taxonomy.components.find(c => c.name === 'Hero').layer = 'blocks';
+  q.bindings.bindings = [];
+  assert.deepEqual(coreConformance(instanceConfig, q.components, core), []);
 });

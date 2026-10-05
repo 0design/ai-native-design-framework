@@ -19,7 +19,7 @@ The kit contains no design system (test: no QFactory strings in `src/`; `test/fi
 Limits: a builder receipt is not a signature; verified/accepted/released are never written by the kit; isolation of
 the author principal comes from deployment rights, not from this package.
 
-## Instance on Core (`ds.core` + `ds.coreBundle` + `ds.coreBundleSha256`, 0.2.0-pilot.3)
+## Instance on Core (`ds.core` + `ds.coreBundle` + `ds.coreBundleSha256`, 0.2.0-pilot.4)
 
 An Instance that extends a Core pins it in `aindf.config.json` three ways: `ds.core` (`id@version`), `ds.coreBundle`
 (path to that Core's AINDF bundle) and `ds.coreBundleSha256` (the bundle's content hash; a self-consistent bundle with the
@@ -33,11 +33,18 @@ accept every prop value the Core contract accepts —
 - limits are no tighter: `maxLength`, `minItems`/`maxItems`, `minimum`/`maximum`; the link pattern is the Core one;
 - every Core slot prop stays; props the Core role does not have are optional;
 - the role keeps its place in a screen: a Core template stays a template, `routeParams` is not added, the taxonomy layer
-  is the Core one, every Core slot exists with a cardinality no tighter.
+  is the Core one, every Core slot exists with a cardinality no tighter; slots the Core role does not have are optional
+  (min 0);
+- every Core component exists in the Instance (contract and taxonomy), every Core binding with the same kind.
 
-What this guarantees: a screen written for a Core role — its props, where it stands, which slots it fills and how many
-children — admits against the Instance unchanged. What a slot accepts is judged by the Instance's own slotsets (its
-accepted components are Instance components).
+What this guarantees: a screen written for Core — its components, props, where they stand, which slots they fill and how
+many children, its bindings — admits against the Instance unchanged, with one exception on purpose: what a slot
+*accepts* is judged by the Instance's own slotsets (their accepted components are Instance components), so a narrower
+`accepts` can still reject a Core screen with `SLOT_REJECTS`. That is not checked here.
+
+`coreConformance(config, components, core, { taxonomy, slots, bindings })`: props, `template`, `routeParams` and the
+Core component list are checked from `components` alone; the taxonomy layer and presence, slots and bindings only when
+that source is passed. `checkDs` passes all of them.
 
 Codes: `CORE_PIN` (AINDF-DS-29) when the bundle is not the pinned one; `CORE_CONFORMANCE` (AINDF-DS-30) per narrowed prop,
-moved role or narrowed slot. Without `ds.coreBundle` nothing changes.
+moved role, narrowed or new required slot, missing component or binding. Without `ds.coreBundle` nothing changes.

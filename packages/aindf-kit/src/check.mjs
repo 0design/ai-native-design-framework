@@ -68,7 +68,7 @@ export function checkDs({ config, sources, core }) {
     }
   }
   if (config.conformsTo !== 'aindf@0.2') err('CONFORMS_TO', 'config', config.conformsTo);
-  if (core) for (const e of coreConformance(config, components, core, { taxonomy, slots })) err(e.code, e.path, e.message);
+  if (core) for (const e of coreConformance(config, components, core, { taxonomy, slots, bindings })) err(e.code, e.path, e.message);
   return errors;
 }
 
@@ -77,11 +77,15 @@ export function checkDs({ config, sources, core }) {
  *  allowed binding, mark and inline component, limits no tighter (maxLength, item counts, number range), the same link
  *  pattern — keeps every Core slot prop and adds only optional props. It also keeps the role's place in a screen: a Core
  *  template stays a template, routeParams is not added, the taxonomy layer is the Core one, every Core slot exists with a
- *  cardinality no tighter. So a screen written for the Core role admits against the Instance unchanged; what a slot
- *  accepts is judged by the Instance's own slotsets. The bundle must be the one pinned in ds.core (and, on load,
+ *  cardinality no tighter and every slot the Instance adds is optional (min 0). Every Core component and every Core binding
+ *  (with its kind) exists in the Instance. So a screen written for Core admits against the Instance unchanged — except
+ *  what a slot accepts: that is judged by the Instance's own slotsets, and a narrower `accepts` can still reject a Core
+ *  screen (SLOT_REJECTS) — deliberately not checked here. template, routeParams and the Core component list are checked
+ *  from `components`; layer and the Core component list in the taxonomy need `taxonomy`, slots need `slots`, bindings need
+ *  `bindings` (checkDs passes all three). The bundle must be the one pinned in ds.core (and, on load,
  *  ds.coreBundleSha256). */
 const MAX_TEXT = 2000, MAX_ITEMS = 50;
-export function coreConformance(config, components, core, { taxonomy, slots } = {}) {
+export function coreConformance(config, components, core, { taxonomy, slots, bindings } = {}) {
   const out = [];
   const fail = (code, path, message) => out.push({ code, path, message });
   const pinned = `${core.ds.id}@${core.ds.version}`;
@@ -93,6 +97,18 @@ export function coreConformance(config, components, core, { taxonomy, slots } = 
   const coreSlots = new Map((core.sources.slots?.slotsets ?? []).map(s => [s.component, s.slots]));
   const ownSlots = new Map((slots?.slotsets ?? []).map(s => [s.component, s.slots]));
   const range = card => card.split('..').map(x => x === '*' ? Infinity : Number(x));
+  // review of #3 (G6/G7): a Core screen may use any Core component and any Core binding — admission fails UNKNOWN_COMPONENT
+  // or UNKNOWN_BINDING otherwise (params/meta bindings are matched by kind)
+  const own = new Set(components.components.map(c => c.name));
+  for (const name of coreContracts.keys()) {
+    if (!own.has(name)) fail('CORE_CONFORMANCE', `components.${name}`, `Core ${pinned} declares this component; the Instance must provide it`);
+    else if (taxonomy && !layers.has(name)) fail('CORE_CONFORMANCE', `taxonomy.${name}`, `Core ${pinned} classifies this component; the Instance taxonomy must too`);
+  }
+  if (bindings) {
+    const kinds = new Map(bindings.bindings.map(b => [b.name, b.kind]));
+    for (const b of core.sources.bindings?.bindings ?? [])
+      if (kinds.get(b.name) !== b.kind) fail('CORE_CONFORMANCE', `bindings.${b.name}`, kinds.has(b.name) ? `kind ${kinds.get(b.name)}, Core has ${b.kind}` : `Core ${pinned} declares this binding (${b.kind})`);
+  }
   for (const c of components.components) {
     const base = coreContracts.get(c.name);
     if (!base) continue;
@@ -125,6 +141,9 @@ export function coreConformance(config, components, core, { taxonomy, slots } = 
       const [min, max] = range(def.cardinality), [myMin, myMax] = range(mine.cardinality);
       if (myMin > min || myMax < max) fail('CORE_CONFORMANCE', sat, `cardinality ${mine.cardinality} is tighter than Core ${def.cardinality}`);
     }
+    // review of #3 (G5): a slot the Core role does not have must be optional, like a new prop — SLOT_CARDINALITY otherwise
+    if (slots) for (const mine of ownSlots.get(c.name) ?? [])
+      if (!(coreSlots.get(c.name) ?? []).some(s => s.name === mine.name) && range(mine.cardinality)[0] > 0) fail('CORE_CONFORMANCE', `slots.${c.name}.${mine.name}`, `a slot the Core role does not have must be optional (min 0), got ${mine.cardinality}`);
   }
   return out;
 }
