@@ -1,0 +1,22 @@
+name: kit
+on:
+  pull_request:
+    paths: ['packages/aindf-kit/**', '.github/workflows/kit.yml']
+  push:
+    branches: [main]
+    paths: ['packages/aindf-kit/**', '.github/workflows/kit.yml']
+permissions:
+  contents: read
+jobs:
+  test:
+    # public repo: GitHub-hosted only — a self-hosted runner would run fork PR code on our machine
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --test packages/aindf-kit/test/*.test.mjs

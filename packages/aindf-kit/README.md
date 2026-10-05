@@ -19,16 +19,22 @@ The kit contains no design system (test: no QFactory strings in `src/`; `test/fi
 Limits: a builder receipt is not a signature; verified/accepted/released are never written by the kit; isolation of
 the author principal comes from deployment rights, not from this package.
 
-## Instance on Core (`ds.core` + `ds.coreBundle`, 0.2.0-pilot.2)
+## Instance on Core (`ds.core` + `ds.coreBundle` + `ds.coreBundleSha256`, 0.2.0-pilot.2)
 
-An Instance that extends a Core names it twice in `aindf.config.json`: `ds.core` (`id@version`) and `ds.coreBundle` (path to
-that Core's AINDF bundle, integrity-checked on load). Generated screens import from one module only — the Instance's
+An Instance that extends a Core pins it in `aindf.config.json` three ways: `ds.core` (`id@version`), `ds.coreBundle`
+(path to that Core's AINDF bundle) and `ds.coreBundleSha256` (the bundle's content hash; a self-consistent bundle with the
+same `id@version` but other contracts is refused). Generated screens import from one module only — the Instance's
 `implementation.module` — so a Core role a screen needs (Input, DialogPanel …) is provided by the Instance under the same
-contract name, implemented with the Instance's look. `aindf check` then holds that contract to the Core one:
+contract name, implemented with the Instance's look. `aindf check` then holds that contract to the Core one: it must
+accept every prop value the Core contract accepts —
 
-- every Core prop stays, with its type, required exactly where Core requires it, with every Core enum value;
-- every Core slot prop stays;
-- props the Core role does not have are optional (a screen written for the Core role admits unchanged).
+- every Core prop stays, with its type, required exactly where Core requires it;
+- every enum value, allowed binding, rich-text mark and inline component stays (the Instance may add more);
+- limits are no tighter: `maxLength`, `minItems`/`maxItems`, `minimum`/`maximum`; the link pattern is the Core one;
+- every Core slot prop stays; props the Core role does not have are optional.
 
-Codes: `CORE_PIN` (AINDF-DS-29) when the bundle is not the pinned `ds.core`; `CORE_CONFORMANCE` (AINDF-DS-30) per broken
-prop or slot. Without `ds.coreBundle` nothing changes.
+What this guarantees: the **props** a screen sets for a Core role admit against the Instance unchanged. What fills a slot
+is judged by the Instance's own slotsets (its accepted components are Instance components).
+
+Codes: `CORE_PIN` (AINDF-DS-29) when the bundle is not the pinned one; `CORE_CONFORMANCE` (AINDF-DS-30) per narrowed prop
+or dropped slot. Without `ds.coreBundle` nothing changes.

@@ -14,6 +14,9 @@ export function loadDs(configPath) {
   const sources = Object.fromEntries(Object.entries(config.sources).map(([name, rel]) => [name, JSON.parse(readFileSync(resolve(base, rel), 'utf8'))]));
   // The pinned Core an Instance extends (ds.coreBundle): read and integrity-checked here, conformance in checkDs.
   if (!config.ds.coreBundle) return { config, sources };
+  // The pin is the content hash, not the name: a bundle with the same id@version but other contracts is another Core.
+  if (!config.ds.coreBundleSha256) throw new AindfError('CONFIG_INVALID', 'ds.coreBundle needs ds.coreBundleSha256 (the pinned Core bundle hash)', configPath);
   const core = verifyBundle(JSON.parse(readFileSync(resolve(base, config.ds.coreBundle), 'utf8')));
+  if (core.bundleSha256 !== config.ds.coreBundleSha256) throw new AindfError('CORE_PIN', `Core bundle ${core.bundleSha256} is not the pinned ${config.ds.coreBundleSha256}`, configPath);
   return { config, sources, core };
 }

@@ -72,27 +72,38 @@ export function checkDs({ config, sources, core }) {
   return errors;
 }
 
-/** Instance on Core (AINDF-DS-29/30): an Instance contract that reuses a Core component name keeps the Core contract —
- *  every Core prop with its type, required where Core requires it, every Core enum value, every Core slot prop — and adds
- *  only optional props, so a screen written for the Core role admits against the Instance unchanged. The Core bundle must
- *  be the one the Instance pins in ds.core. */
+/** Instance on Core (AINDF-DS-29/30): an Instance contract that reuses a Core component name accepts every prop value the
+ *  Core contract accepts — every Core prop with its type, required exactly where Core requires it, every enum value, every
+ *  allowed binding, mark and inline component, limits no tighter (maxLength, item counts, number range), the same link
+ *  pattern — keeps every Core slot prop and adds only optional props. So the props a screen sets for the Core role admit
+ *  against the Instance unchanged; slot contents are judged by the Instance's own slotsets. The bundle must be the one
+ *  pinned in ds.core (and, on load, ds.coreBundleSha256). */
+const MAX_TEXT = 2000, MAX_ITEMS = 50;
 export function coreConformance(config, components, core) {
   const out = [];
   const fail = (code, path, message) => out.push({ code, path, message });
   const pinned = `${core.ds.id}@${core.ds.version}`;
   if (config.ds.core !== pinned) { fail('CORE_PIN', 'config.ds.coreBundle', `bundle is ${pinned}, ds.core is ${config.ds.core ?? 'unset'}`); return out; }
   const coreContracts = new Map(core.sources.components.components.map(c => [c.name, c]));
+  const missing = (base, mine) => (base ?? []).filter(v => !(mine ?? []).includes(v));
   for (const c of components.components) {
     const base = coreContracts.get(c.name);
     if (!base) continue;
     const at = `components.${c.name}`;
     for (const [p, def] of Object.entries(base.props)) {
-      const mine = c.props[p];
-      if (!mine) { fail('CORE_CONFORMANCE', `${at}.props.${p}`, `Core ${pinned} declares ${p}; the Instance contract must keep it`); continue; }
-      if (mine.type !== def.type) fail('CORE_CONFORMANCE', `${at}.props.${p}`, `type ${mine.type}, Core has ${def.type}`);
-      if (def.required && !mine.required) fail('CORE_CONFORMANCE', `${at}.props.${p}`, 'Core requires it; the Instance must too');
-      if (!def.required && mine.required) fail('CORE_CONFORMANCE', `${at}.props.${p}`, 'optional in Core; a screen written for Core may omit it');
-      if (def.type === 'enum') for (const v of def.values ?? []) if (!(mine.values ?? []).includes(v)) fail('CORE_CONFORMANCE', `${at}.props.${p}`, `Core value ${v} is missing`);
+      const mine = c.props[p], pat = `${at}.props.${p}`;
+      if (!mine) { fail('CORE_CONFORMANCE', pat, `Core ${pinned} declares ${p}; the Instance contract must keep it`); continue; }
+      if (mine.type !== def.type) { fail('CORE_CONFORMANCE', pat, `type ${mine.type}, Core has ${def.type}`); continue; }
+      if (def.required && !mine.required) fail('CORE_CONFORMANCE', pat, 'Core requires it; the Instance must too');
+      if (!def.required && mine.required) fail('CORE_CONFORMANCE', pat, 'optional in Core; a screen written for Core may omit it');
+      for (const [key, label] of [['values', 'enum value'], ['bindings', 'binding'], ['marks', 'mark'], ['inlineComponents', 'inline component']])
+        for (const v of missing(def[key], mine[key])) fail('CORE_CONFORMANCE', pat, `Core ${label} ${v} is missing`);
+      if ((mine.maxLength ?? MAX_TEXT) < (def.maxLength ?? MAX_TEXT)) fail('CORE_CONFORMANCE', pat, `maxLength ${mine.maxLength} is tighter than Core ${def.maxLength ?? MAX_TEXT}`);
+      if ((mine.minItems ?? 0) > (def.minItems ?? 0)) fail('CORE_CONFORMANCE', pat, `minItems ${mine.minItems} is tighter than Core ${def.minItems ?? 0}`);
+      if ((mine.maxItems ?? MAX_ITEMS) < (def.maxItems ?? MAX_ITEMS)) fail('CORE_CONFORMANCE', pat, `maxItems ${mine.maxItems} is tighter than Core ${def.maxItems ?? MAX_ITEMS}`);
+      if ((mine.minimum ?? -Infinity) > (def.minimum ?? -Infinity)) fail('CORE_CONFORMANCE', pat, `minimum ${mine.minimum} is tighter than Core ${def.minimum}`);
+      if ((mine.maximum ?? Infinity) < (def.maximum ?? Infinity)) fail('CORE_CONFORMANCE', pat, `maximum ${mine.maximum} is tighter than Core ${def.maximum}`);
+      if ((mine.hrefPattern ?? null) !== (def.hrefPattern ?? null)) fail('CORE_CONFORMANCE', pat, 'the link pattern must be the Core one (patterns cannot be compared for inclusion)');
     }
     for (const [p, def] of Object.entries(c.props)) if (!(p in base.props) && def.required) fail('CORE_CONFORMANCE', `${at}.props.${p}`, 'a prop the Core role does not have must be optional');
     for (const slot of Object.keys(base.slotProps ?? {})) if (!(slot in (c.slotProps ?? {}))) fail('CORE_CONFORMANCE', `${at}.slotProps.${slot}`, `Core ${pinned} declares this slot`);
