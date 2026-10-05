@@ -1,0 +1,1 @@
+{ "aindfVersion": "0.1", "modifierCategories": ["tone"], "modifiers": [ { "category": "tone", "values": ["loud"], "appliesTo": { "components": ["Cta"] } } ] }

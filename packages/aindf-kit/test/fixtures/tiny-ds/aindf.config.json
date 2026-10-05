@@ -1,0 +1,3 @@
+{ "conformsTo": "aindf@0.2", "ds": { "id": "tiny", "version": "1.0.0" },
+  "sources": { "tokens": "tokens.json", "taxonomy": "taxonomy.json", "slots": "slots.json", "applicability": "applicability.json", "presets": "presets.json", "components": "components.json", "bindings": "bindings.json" },
+  "implementation": { "framework": "next-app", "module": "@tiny/ds" } }

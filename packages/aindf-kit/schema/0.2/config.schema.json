@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aindf.oleg.design/schemas/0.2/config.schema.json",
+  "title": "AINDF DS config",
+  "description": "Entry file of a conforming design system (aindf.config.json). Declares identity, the AINDF version it conforms to, where each contract source lives and which module implements the components for the trusted builder.",
+  "type": "object",
+  "required": ["conformsTo", "ds", "sources", "implementation"],
+  "additionalProperties": false,
+  "properties": {
+    "conformsTo": { "const": "aindf@0.2" },
+    "ds": {
+      "type": "object", "required": ["id", "version"], "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9.-]{0,63}$" },
+        "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:-[a-z0-9.-]+)?$" },
+        "core": { "type": "string", "description": "pinned Core the Instance extends, e.g. shadcn@3.4.2" }
+      }
+    },
+    "sources": {
+      "type": "object",
+      "required": ["tokens", "taxonomy", "slots", "applicability", "presets", "components", "bindings"],
+      "additionalProperties": false,
+      "properties": {
+        "tokens": { "type": "string" }, "taxonomy": { "type": "string" }, "slots": { "type": "string" },
+        "applicability": { "type": "string" }, "presets": { "type": "string" }, "patterns": { "type": "string" },
+        "components": { "type": "string" }, "bindings": { "type": "string" }
+      }
+    },
+    "implementation": {
+      "type": "object", "required": ["framework", "module"], "additionalProperties": false,
+      "properties": {
+        "framework": { "enum": ["next-app"] },
+        "module": { "type": "string", "description": "import specifier the generated screens import components from; owned by the DS maintainer" }
+      }
+    }
+  }
+}

@@ -1,0 +1,64 @@
+{
+ "aindfVersion": "0.2",
+ "components": [
+  {
+   "name": "Page",
+   "export": "Page",
+   "template": true,
+   "props": {
+    "title": {
+     "type": "text",
+     "required": true
+    }
+   },
+   "slotProps": {
+    "banner": "banner"
+   }
+  },
+  {
+   "name": "Hero",
+   "export": "Hero",
+   "props": {
+    "tone": {
+     "type": "enum",
+     "values": [
+      "calm",
+      "bold"
+     ]
+    }
+   },
+   "slotProps": {
+    "title": "title",
+    "actions": "children"
+   }
+  },
+  {
+   "name": "Heading",
+   "export": "Heading",
+   "props": {
+    "text": {
+     "type": "text",
+     "required": true,
+     "maxLength": 40
+    }
+   }
+  },
+  {
+   "name": "Cta",
+   "export": "Cta",
+   "props": {
+    "label": {
+     "type": "text",
+     "required": true
+    },
+    "action": {
+     "type": "binding",
+     "bindings": [
+      "signup"
+     ],
+     "required": true
+    }
+   }
+  }
+ ]
+}

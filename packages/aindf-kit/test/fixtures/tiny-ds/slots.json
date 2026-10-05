@@ -1,0 +1,42 @@
+{
+ "aindfVersion": "0.1",
+ "slotsets": [
+  {
+   "component": "Hero",
+   "slots": [
+    {
+     "name": "title",
+     "accepts": {
+      "components": [
+       "Heading"
+      ]
+     },
+     "cardinality": "1..1"
+    },
+    {
+     "name": "actions",
+     "accepts": {
+      "layers": [
+       "elements"
+      ]
+     },
+     "cardinality": "0..*"
+    }
+   ]
+  },
+  {
+   "component": "Page",
+   "slots": [
+    {
+     "name": "banner",
+     "accepts": {
+      "components": [
+       "Heading"
+      ]
+     },
+     "cardinality": "0..1"
+    }
+   ]
+  }
+ ]
+}
