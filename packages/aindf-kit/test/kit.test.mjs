@@ -179,3 +179,13 @@ test('[AINDF-DS-33] a good example must admit and a bad one must not; matching e
     ['bad that admits', { bad: [{ label: 'Join', action: 'signup' }] }, 'INVALID_EXAMPLE components.Cta.examples.bad[0]'],
   ]) assert.deepEqual(checkDs(fresh(examples)).map(e => `${e.code} ${e.path}`), [want], why);
 });
+
+// review of #11: a bad example can name the refusal it shows ($expect); without it, any refusal counts
+test('[AINDF-DS-33] a bad example with $expect must be refused with that code', async () => {
+  const { loadDs, checkDs } = await import('../src/index.mjs');
+  const fresh = examples => { const ds = loadDs(new URL('./fixtures/tiny-ds/aindf.config.json', import.meta.url).pathname); ds.sources.components.components.find(c => c.name === 'Cta').examples = examples; return ds; };
+  assert.deepEqual(checkDs(fresh({ bad: [{ label: 'Go', className: 'x', $expect: 'UNKNOWN_PROP' }, { action: 'signup', $expect: 'MISSING_PROP' }] })), []);
+  assert.deepEqual(checkDs(fresh({ bad: [{ label: 'Go', action: 'signup', className: 'x', $expect: 'MISSING_PROP' }] })).map(e => `${e.code} ${e.path}`), ['INVALID_EXAMPLE components.Cta.examples.bad[0].$expect']);
+  assert.deepEqual(checkDs(fresh({ bad: [{ label: 'Go', action: 'signup', $expect: 'UNKNOWN_PROP' }] })).map(e => `${e.code} ${e.path}`), ['INVALID_EXAMPLE components.Cta.examples.bad[0]'], 'an admitted bad example still fails first');
+  assert.deepEqual(checkDs(fresh({ bad: [{ className: 'x', $expect: 'NOPE' }] })).map(e => e.code), ['SCHEMA'], 'an unknown expected code is a schema error');
+});

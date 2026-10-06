@@ -44,8 +44,11 @@ export function checkDs({ config, sources, core }) {
       const at2 = `${at}.examples.good[${i}]`;
       for (const e of [...propErrors(c, c.name, props, at2), ...missingProps(c, c.name, props, at2)]) err('INVALID_EXAMPLE', e.path, `good example is refused by admission: ${e.code} ${e.message}`);
     });
-    (c.examples?.bad ?? []).forEach((props, i) => {
-      if (![...propErrors(c, c.name, props, ''), ...missingProps(c, c.name, props, '')].length) err('INVALID_EXAMPLE', `${at}.examples.bad[${i}]`, 'bad example is admitted: it shows nothing an agent must avoid');
+    (c.examples?.bad ?? []).forEach((item, i) => {
+      const { $expect, ...props } = item;
+      const codes = [...propErrors(c, c.name, props, ''), ...missingProps(c, c.name, props, '')].map(e => e.code);
+      if (!codes.length) err('INVALID_EXAMPLE', `${at}.examples.bad[${i}]`, 'bad example is admitted: it shows nothing an agent must avoid');
+      else if ($expect && !codes.includes($expect)) err('INVALID_EXAMPLE', `${at}.examples.bad[${i}].$expect`, `bad example is refused with ${[...new Set(codes)].join(', ')}, not ${$expect}`);
     });
   }
   for (const set of slots.slotsets) {
