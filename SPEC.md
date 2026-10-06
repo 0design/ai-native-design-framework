@@ -1,7 +1,7 @@
 # AI-Native Design Framework (AINDF) — Specification
 
-**Version:** 0.2.0-draft · **Status:** Draft (0.1.0 is the released version; 0.2 is implemented only as a pilot in
-[`packages/aindf-kit`](packages/aindf-kit) and may change)
+**Version:** 0.2.0-draft · **Status:** Draft (the 0.1 sections below are the published draft 0.1; 0.2 is implemented
+only as a pilot in [`packages/aindf-kit`](packages/aindf-kit) and may change)
 
 AINDF is a specification for building design systems that an AI agent can
 **discover, reason about, generate, and validate** without a human in the
@@ -151,7 +151,10 @@ screen. The design system declares named **bindings**, each of one kind:
 | `action` | a side effect behind a component | a `binding` prop, from its allowlist |
 | `params` | the static parameters of a `[param]` route | `params.binding` |
 
-A screen refers to a binding by name only.
+A screen refers to a binding by name only. The kind is checked only where a
+screen uses it directly: `params.binding` must be a `params` binding and a
+`meta` binding must be a `data` binding. A `binding` prop is matched by name
+against its allowlist.
 
 ### 7.3 ScreenSpec (`screen`)
 
@@ -163,11 +166,15 @@ styles, code or undeclared fields.
 
 ### 7.4 Bundle and pin
 
-A design system revision is published as an immutable **bundle**: its config
-and every contract source in one document, addressed by the sha256 of its
-canonical JSON (`bundleSha256`). Screens pin it; the MCP server serves it; a
-bundle whose bytes do not match its hash is refused. A bundle is only produced
-from a design system that passes conformance (§9).
+A design system revision is published as an immutable **bundle**: its identity
+(`ds`), `conformsTo`, `implementation` and every contract source in one
+document, addressed by `bundleSha256` — the sha256 of its canonical JSON
+(object keys sorted at every level, no whitespace, a trailing `\n`). Screens pin
+it; the MCP server serves it. A bundle whose hash, recomputed from its parsed
+JSON, differs from `bundleSha256` is refused. A bundle is only produced from a
+design system that passes conformance (§9). The design-system maintainer
+produces it (`aindf bundle`) and publishes it wherever its builder and MCP
+server read it from; AINDF does not prescribe a registry.
 
 ### 7.5 Admission
 
@@ -177,8 +184,9 @@ screen without reading source. It refuses, among others: a screen pinned to
 another revision; unknown components, props, slots or fields; a non-template in
 the template position; a non-`sections` component as a section; slot content the
 slot does not accept or outside its cardinality; values outside their type and
-limits; unknown or wrong-kind bindings; route parameters that do not match the
-route. Codes: [`RULES.md`](packages/aindf-kit/RULES.md), `AINDF-SCR-*`.
+limits; a binding prop outside its allowlist; a `params` or `meta` binding that
+is unknown or not of kind `params` / `data`; route parameters that do not match
+the route. Codes: [`RULES.md`](packages/aindf-kit/RULES.md), `AINDF-SCR-*`.
 
 ### 7.6 Build and states
 
@@ -186,13 +194,20 @@ A **trusted builder** — not the author — generates code from admitted screen
 and the pinned bundle. Generated files are marked, and the check mode (`aindf build --check`) compares
 them with what the screens and the bundle produce:
 a hand edit, a stale screen, a changed bundle or an orphan page fails
-(`AINDF-BLD-*`). Each build writes a **receipt** that binds the screen bytes,
-the bundle and the generated output.
+(`AINDF-BLD-*`). On request (`--receipts`) a build writes a **receipt** per
+screen that binds the screen bytes, the bundle and the generated output.
 
-Results move through states that are never merged:
+A result passes through states that are never collapsed into one claim:
 **built** (the builder wrote the receipt) → **verified** (an independent check
-passed) → **accepted** (the owner accepted it) → **released**. The builder only
-ever writes `built`; a receipt is not a signature and not acceptance.
+passed) → **accepted** (the design-system owner accepted it) → **released**.
+The builder only ever writes `built`; a receipt is not a signature and not
+acceptance. *In the pilot, `verified`, `accepted` and `released` are not
+recorded by the kit at all*: whoever runs the independent check, the owner and
+the release process record them outside AINDF.
+
+Before a build, the MCP server reports its own states to the author: a
+submitted screen that fails admission is `rejected`; an admitted one is staged
+as a `draft` for the trusted builder; an extension request is `requested`.
 
 The pilot generates Next.js App Router pages (`implementation.framework:
 "next-app"`) that import components from one module only,
@@ -204,21 +219,27 @@ A design system (an **Instance**) may extend another one (a **Core**). It pins
 the Core by `ds.core` (`id@version`), `ds.coreBundle` (path to the Core bundle)
 and `ds.coreBundleSha256` (its content hash). Screens import only the Instance
 module, so the Instance provides every Core role under the same contract name.
-Conformance then holds each such contract to the Core one, so a screen written
-for the Core admits against the Instance unchanged: no Core prop, value,
-binding, limit, slot, component or placement is narrowed, and anything the
-Instance adds is optional. One exception is deliberate: what a slot *accepts* is
-decided by the Instance (`AINDF-DS-29`, `AINDF-DS-30`).
+Conformance then holds each such contract to the Core one (`AINDF-DS-30`;
+the pin itself: `AINDF-DS-29`), so a screen written for the Core admits against
+the Instance unchanged **except its `ds` pin**, which names the Core revision
+and must be moved to the Instance revision (`aindf repin`; otherwise
+`DS_PIN_MISMATCH`). No Core prop, value, limit, slot, component or placement is
+narrowed, and anything the Instance adds is optional. Every Core binding must
+exist; its kind must stay the same only for `params` and `data` bindings, the
+only kinds admission checks. One exception is deliberate: what a slot
+*accepts* is decided by the Instance (`AINDF-DS-30`). Without `ds.coreBundle`
+none of these Core checks run.
 
 ### 7.8 Requests instead of workarounds
 
 When the design system lacks something, the author does not write its own
 markup or styles: it asks for an extension (`request-extension`, §9). The
-missing capability becomes work for the design-system owner.
+request is recorded for the design-system owner, who decides on it.
 
 ## 8. Single source → generation
 
-A conformant system declares its contracts once (the sources of §9) and
+A conformant system declares its contracts once (the five sources of 0.1,
+seven in 0.2 — §9 — plus optional patterns) and
 generates every downstream artifact from them: agent docs, type definitions,
 lint rules, and MCP responses. Hand-maintaining any generated artifact breaks
 conformance, because drift means an agent reads a stale contract.
@@ -246,8 +267,9 @@ draft) when, in addition:
    its `implementation` (framework and module);
 9. every classified component has a closed contract (`components`) and every
    contract is classified; no contract declares a forbidden prop;
-10. every binding a contract, screen meta or params refers to is declared
-    (`bindings`), and every `binding` prop has an allowlist;
+10. every binding a contract refers to is declared (`bindings`) and every
+    `binding` prop has an allowlist (bindings a screen's `meta` or `params`
+    name are checked at admission, §7.5);
 11. it publishes revisions as bundles (§7.4) and admits screens only against a
     pinned bundle (§7.5);
 12. its MCP server also exposes `get-ds`, `get-component` and `validate-screen`;
@@ -255,7 +277,11 @@ draft) when, in addition:
     never build, verify, accept or release;
 13. as an Instance on a Core, it passes the Core checks of §7.7.
 
-Every failure has a stable rule ID and code; nothing is ignored or auto-fixed.
+A broken rule fails with a stable rule ID and code; nothing is ignored, and the
+kit never fixes a source or a screen on its own. Two limits of the pilot: a file
+that is not valid JSON fails with the parser's error, not a rule code; and
+`aindf repin` rewrites the `ds` pin of screens — on explicit request, and only
+for screens that admit against the new revision.
 The full list: [`packages/aindf-kit/RULES.md`](packages/aindf-kit/RULES.md).
 Schemas: 0.1 in [`schemas/`](schemas), 0.2 additions in
 [`packages/aindf-kit/schema/0.2`](packages/aindf-kit/schema/0.2).
@@ -278,6 +304,6 @@ screens against it. The dependency arrow is one-way:
 
 ---
 
-*Draft. 0.1 is released; 0.2 is a draft implemented only as a pilot. The spec may
+*Draft. 0.1 is the published draft; 0.2 is a draft implemented only as a pilot. The spec may
 still change before 1.0. Version 1.0 will come after at least one real design
 system has been built on it.*
