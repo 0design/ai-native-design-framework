@@ -1,13 +1,15 @@
 # AI-Native Design Framework (AINDF)
 
 > **Draft README for v2: not approved and not released.** Status markers below:
-> **Available** = released and usable today; **Soon** = part of v2, which is not released yet.
+> **Available** = published and usable today; **Pilot, not released** = in this repo, being tried on QFactory first;
+> **Soon** = part of v2, which is not released yet. Sentences marked *[new copy]* are not on the AINDF landing yet and
+> need the owner's decision.
 
 **Stop slop-factory: upgrade your design system with the AI-Native Design Framework.**
 
 *“You’re absolutely right, I ignored your design system and hardcoded UI. Again.”*
 AINDF is for design-system owners and the teams whose agents build screens from it, so that this answer stops
-being normal. It works in the agent you already use: Codex, Claude Code or Cursor.
+being normal. *[new copy]*
 
 AINDF is a spec, not a component library. You keep your own tokens, components and brand.
 
@@ -15,7 +17,7 @@ Website: https://aindf.oleg.design
 
 ## What you get
 
-| | |
+| Status | What |
 |---|---|
 | **Available** | **Your design system stays the single source.** AINDF describes your design system as one model your agent reads: tokens, components, slots and the rules between them, written down as JSON files. |
 | **Soon** | **Your agent looks up what your design system offers instead of guessing.** |
@@ -25,8 +27,8 @@ Website: https://aindf.oleg.design
 
 ## How it works
 
-Your request goes through your design system’s tokens and components to the screen. A hardcoded value is refused
-and becomes an extension request that waits for you.
+*Soon:* your request goes through your design system’s tokens and components to the screen. A hardcoded value is
+refused and becomes an extension request that waits for you.
 
 1. **Your agent works with your design system, not around it.** It sees what your design system can do and
    arranges screens from it. It doesn’t hand-write the page’s code, and it can’t change your design system. *Soon*
@@ -46,7 +48,7 @@ and becomes an extension request that waits for you.
 | [`SPEC.md`](SPEC.md) | Available (draft 0.1) | The spec: component layers, tokens, modifiers, presets and patterns. |
 | [`schemas/`](schemas) | Available | JSON Schemas for the files your design system publishes: tokens, taxonomy, slots, applicability, presets and patterns. |
 | [`patterns/starter.json`](patterns/starter.json) | Available | An example pattern for a newsletter signup section. |
-| [`packages/aindf-kit`](packages/aindf-kit) | Pilot, not released | The v2 tools: validator, MCP server and builder. AINDF is piloted on QFactory first. The API may change, and the kit is not published to npm. |
+| [`packages/aindf-kit`](packages/aindf-kit) | Pilot, not released | The v2 tools: validator, MCP server and builder. AINDF is piloted on QFactory first. The API may change, and the kit is not published to npm. *[new copy]* |
 
 ## Getting started
 
@@ -71,9 +73,8 @@ To hear when v2 is out, watch this repo on GitHub: **Watch → Custom → Releas
 
 ## For engineers
 
-The contract schemas, the MCP query surface a conforming design system exposes and the conformance rules are in
-[`SPEC.md`](SPEC.md) and [`schemas/`](schemas). The pilot kit, its rule IDs and its limits:
-[`packages/aindf-kit`](packages/aindf-kit) ([`RULES.md`](packages/aindf-kit/RULES.md)).
+AINDF is piloted on QFactory first. The contract schemas, the MCP query surface a conforming design system exposes and
+the conformance rules are in the spec on GitHub: [`SPEC.md`](SPEC.md) and [`schemas/`](schemas).
 
 ## Status
 
