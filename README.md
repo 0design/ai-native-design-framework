@@ -16,10 +16,12 @@ Website: https://aindf.oleg.design
   publishes: tokens, taxonomy, slots, applicability, presets and patterns.
 - [`patterns/starter.json`](patterns/starter.json): an example pattern for a
   newsletter signup section.
+- [`packages/aindf-kit`](packages/aindf-kit): a pilot of the v2 tools (validator,
+  MCP server, builder). It is not released yet and its API may change. It is not
+  published to npm.
 
-The validator, MCP server and builder come in the next release, see
-[Coming in v2](#coming-in-v2). For now you can check your files against the
-schemas.
+The released part is the spec and the schemas: you can check your files against
+them today. The v2 tools are described in [Coming in v2](#coming-in-v2).
 
 ## Getting started
 
@@ -56,7 +58,8 @@ To hear when v2 is out, watch this repo on GitHub: **Watch → Custom → Releas
 
 ## Status
 
-Draft 0.1. The spec may still change before 1.0.
+Draft 0.1. The spec may still change before 1.0. The v2 tools in
+`packages/aindf-kit` are a pilot, not a release.
 
 ## Contributing
 
