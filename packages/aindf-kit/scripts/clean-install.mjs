@@ -15,7 +15,8 @@ const source = JSON.parse(readFileSync(join(kitDir, 'package.json'), 'utf8'));
 const work = mkdtempSync(join(tmpdir(), 'aindf-clean-install-'));
 const project = join(work, 'project');
 const steps = [];
-const step = (name, fn) => { fn(); steps.push(name); console.log(`ok ${name}`); };
+let current = 'setup';
+const step = (name, fn) => { current = name; fn(); steps.push(name); console.log(`ok ${name}`); };
 const run = (args, opts = {}) => {
   try { return { code: 0, out: execFileSync(join(project, 'node_modules/.bin/aindf'), args, { cwd: project, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], ...opts }) }; }
   catch (e) { return { code: e.status, out: `${e.stdout ?? ''}${e.stderr ?? ''}` }; }
@@ -127,6 +128,6 @@ try {
 
   console.log(JSON.stringify({ result: 'PASS', kit: installed.version, tarball: packed.filename, tarballSha256: tarSha256, node: process.version, steps: steps.length }));
 } catch (error) {
-  console.error(`clean-install: FAIL ${error.message}`);
+  console.error(`clean-install: FAIL at «${current}»: ${error.message}`);
   process.exitCode = 1;
 } finally { rmSync(work, { recursive: true, force: true }); }

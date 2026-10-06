@@ -16,6 +16,8 @@ const TOOLS = [
   { name: 'request-extension', description: 'Ask the DS owner for a missing capability instead of working around the contract. Requires an author token.', inputSchema: obj({ need: { type: 'string', maxLength: 2000 }, route: { type: 'string' }, components: { type: 'array', items: { type: 'string' } } }, ['need']) },
 ];
 const text = value => ({ content: [{ type: 'text', text: JSON.stringify(value, null, 2) }], structuredContent: value });
+// Cut by code points, never inside a surrogate pair (a cut emoji would leave a lone surrogate the server then refuses).
+const clip = (s, n) => Array.from(s).slice(0, n).join('');
 const toolError = (code, message) => ({ content: [{ type: 'text', text: `${code}: ${message}` }], structuredContent: { ok: false, code, message }, isError: true });
 /**
  * Stateless MCP (JSON-RPC 2.0) handler serving one immutable DS bundle.
@@ -42,8 +44,8 @@ export function createDsMcp(bundle, { staging = null, serverName = `aindf-ds-${b
         const principal = await staging.authorize(auth);
         if (!principal) return toolError('UNAUTHORIZED', 'an author token is required (Authorization: Bearer ...)');
         if (name === 'request-extension') {
-          const record = { kind: 'aindf.extension-request', ds: bundlePin(bundle), principal, need: String(args.need ?? '').slice(0, 2000), route: args.route ?? null, components: Array.isArray(args.components) ? args.components.map(String).slice(0, 20) : [] };
-          const id = sha256(record);
+          const record = { kind: 'aindf.extension-request', ds: bundlePin(bundle), principal, need: clip(String(args.need ?? ''), 2000), route: args.route ?? null, components: Array.isArray(args.components) ? args.components.map(String).slice(0, 20) : [] };
+          let id; try { id = sha256(record); } catch (e) { if (e.code) return toolError(e.code, `${e.path}: ${e.reason}`); throw e; }
           await staging.put(`extension-requests/${bundle.ds.id}/${id}.json`, JSON.stringify(record, null, 2) + '\n');
           return text({ ok: true, id, state: 'requested' });
         }
@@ -51,7 +53,7 @@ export function createDsMcp(bundle, { staging = null, serverName = `aindf-ds-${b
         if (!admitted.ok) return text({ ok: false, errors: admitted.errors, state: 'rejected' });
         const bytes = JSON.stringify(args.screen, null, 2) + '\n';
         const id = sha256(bytes);
-        const record = { kind: 'aindf.submission', ds: bundlePin(bundle), principal, screenSha256: id, route: args.screen.route, note: typeof args.note === 'string' ? args.note.slice(0, 500) : null, state: 'draft' };
+        const record = { kind: 'aindf.submission', ds: bundlePin(bundle), principal, screenSha256: id, route: args.screen.route, note: typeof args.note === 'string' ? clip(args.note, 500) : null, state: 'draft' };
         const stored = await staging.put(`screens/${bundle.ds.id}/${bundle.ds.version}/${id}.screen.json`, bytes);
         await staging.put(`screens/${bundle.ds.id}/${bundle.ds.version}/${id}.submission.json`, JSON.stringify(record, null, 2) + '\n');
         return text({ ok: true, id, state: 'draft', created: stored.created, next: 'the trusted builder picks drafts up; you cannot build, verify, accept or release' });
