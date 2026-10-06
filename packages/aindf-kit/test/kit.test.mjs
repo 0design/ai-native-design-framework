@@ -166,3 +166,16 @@ test('[AINDF-DS-32] a prop default must be a value a screen could set; a valid d
     ['binding outside the allowlist', ds => { at(ds, 'Cta', 'action').default = 'other'; }, 'components.Cta.props.action.default'],
   ]) { const ds = fresh(); mutate(ds); assert.deepEqual(checkDs(ds).map(e => `${e.code} ${e.path}`), [`INVALID_DEFAULT ${path}`], why); }
 });
+
+// review of #10: examples were not checked — an MCP could show a "good" example that admission refuses
+test('[AINDF-DS-33] a good example must admit and a bad one must not; matching examples pass', async () => {
+  const { loadDs, checkDs } = await import('../src/index.mjs');
+  const fresh = examples => { const ds = loadDs(new URL('./fixtures/tiny-ds/aindf.config.json', import.meta.url).pathname); ds.sources.components.components.find(c => c.name === 'Cta').examples = examples; return ds; };
+  assert.deepEqual(checkDs(fresh({ good: [{ label: 'Join', action: 'signup' }], bad: [{ label: 'Go', className: 'x' }, { action: 'signup' }] })), []);
+  for (const [why, examples, want] of [
+    ['good with an unknown prop', { good: [{ label: 'Join', action: 'signup', className: 'x' }] }, 'INVALID_EXAMPLE components.Cta.examples.good[0].props.className'],
+    ['good with an invalid value', { good: [{ label: 'Join', action: 'nope' }] }, 'INVALID_EXAMPLE components.Cta.examples.good[0].props.action'],
+    ['good missing a required prop', { good: [{ action: 'signup' }] }, 'INVALID_EXAMPLE components.Cta.examples.good[0].props'],
+    ['bad that admits', { bad: [{ label: 'Join', action: 'signup' }] }, 'INVALID_EXAMPLE components.Cta.examples.bad[0]'],
+  ]) assert.deepEqual(checkDs(fresh(examples)).map(e => `${e.code} ${e.path}`), [want], why);
+});

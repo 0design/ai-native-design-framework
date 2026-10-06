@@ -34,6 +34,20 @@ export function propValueError(def, value) {
   if (def.type === 'textList' && (!Array.isArray(value) || !value.every(text) || value.length < (def.minItems ?? 0) || value.length > (def.maxItems ?? 50))) return { code: 'INVALID_TEXT_LIST', message: `${def.minItems ?? 0}..${def.maxItems ?? 50} non-empty texts` };
   return null;
 }
+/** The props of one node against its contract (no slots, no route): unknown props and invalid values, then missing
+ *  required props. Shared by admission and by the DS check of contract examples. Errors are { code, path, message }. */
+export function propErrors(c, name, props, path) {
+  const out = [];
+  for (const [key, value] of Object.entries(props)) {
+    const def = Object.hasOwn(c.props, key) ? c.props[key] : undefined;
+    const at = `${path}.props.${key}`;
+    if (!def) { out.push({ code: 'UNKNOWN_PROP', path: at, message: `${name} has no prop ${key}; allowed: ${Object.keys(c.props).join(', ') || 'none'}` }); continue; }
+    const bad = propValueError(def, value);
+    if (bad) out.push({ ...bad, path: at });
+  }
+  return out;
+}
+export const missingProps = (c, name, props, path) => Object.entries(c.props).filter(([key, def]) => def.required && !Object.hasOwn(props, key)).map(([key]) => ({ code: 'MISSING_PROP', path: `${path}.props`, message: `${name} requires ${key}` }));
 /**
  * Admission of one ScreenSpec against one DS bundle. Pure JSON in, stable-coded errors out.
  * Returns { ok, errors } — errors carry { code, path, message } so an agent can repair without reading source.
@@ -63,15 +77,9 @@ export function admitScreen(bundle, screen) {
     }
     const props = n.props ?? {};
     if (!isObject(props)) return err('SCREEN_SHAPE', `${path}.props`, 'props must be an object');
-    for (const [key, value] of Object.entries(props)) {
-      const def = Object.hasOwn(c.props, key) ? c.props[key] : undefined;
-      const at = `${path}.props.${key}`;
-      if (!def) { err('UNKNOWN_PROP', at, `${n.component} has no prop ${key}; allowed: ${Object.keys(c.props).join(', ') || 'none'}`); continue; }
-      const bad = propValueError(def, value);
-      if (bad) err(bad.code, at, bad.message);
-    }
+    for (const e of propErrors(c, n.component, props, path)) err(e.code, e.path, e.message);
     if (c.routeParams && !routeHasParams) err('ROUTE_PARAMS_UNAVAILABLE', `${path}.component`, `${n.component} needs a [param] route`);
-    for (const [key, def] of Object.entries(c.props)) if (def.required && !Object.hasOwn(props, key)) err('MISSING_PROP', `${path}.props`, `${n.component} requires ${key}`);
+    for (const e of missingProps(c, n.component, props, path)) err(e.code, e.path, e.message);
     const set = slotsets.get(n.component);
     const filled = n.slots ?? {};
     for (const [slot, children] of Object.entries(filled)) {

@@ -1,6 +1,6 @@
 import { readSchema } from './schemas.mjs';
 import { validateSchema } from './schema.mjs';
-import { propValueError } from './admit.mjs';
+import { propValueError, propErrors, missingProps } from './admit.mjs';
 const LAYERS = ['atoms', 'elements', 'blocks', 'sections'];
 const SOURCE_SCHEMAS = { tokens: '0.1/tokens.schema.json', taxonomy: '0.1/taxonomy.schema.json', slots: '0.1/slots.schema.json', applicability: '0.1/applicability.schema.json', presets: '0.1/presets.schema.json', patterns: '0.1/patterns.schema.json', components: '0.2/components.schema.json', bindings: '0.2/bindings.schema.json' };
 const TOKEN_TARGETS = { foundations: [], semantic: ['foundations', 'semantic'], component: ['foundations', 'semantic', 'component'] };
@@ -39,6 +39,14 @@ export function checkDs({ config, sources, core }) {
       if (Object.hasOwn(def, 'default')) { const bad = propValueError(def, def.default); if (bad) err('INVALID_DEFAULT', `${at}.props.${p}.default`, `${bad.code}: ${bad.message}`); }
     }
     for (const slot of Object.keys(c.slotProps ?? {})) if (!slotsets.get(c.name)?.slots.some(s => s.name === slot)) err('UNKNOWN_SLOT_PROP', at, slot);
+    // a contract's examples are what an agent copies from get-component: a good one must admit, a bad one must not
+    (c.examples?.good ?? []).forEach((props, i) => {
+      const at2 = `${at}.examples.good[${i}]`;
+      for (const e of [...propErrors(c, c.name, props, at2), ...missingProps(c, c.name, props, at2)]) err('INVALID_EXAMPLE', e.path, `good example is refused by admission: ${e.code} ${e.message}`);
+    });
+    (c.examples?.bad ?? []).forEach((props, i) => {
+      if (![...propErrors(c, c.name, props, ''), ...missingProps(c, c.name, props, '')].length) err('INVALID_EXAMPLE', `${at}.examples.bad[${i}]`, 'bad example is admitted: it shows nothing an agent must avoid');
+    });
   }
   for (const set of slots.slotsets) {
     const owner = classified.get(set.component);
