@@ -1,35 +1,59 @@
 # AI-Native Design Framework (AINDF)
 
-Make generic UI look consistent. No hardcoding, no ignoring your design system.
+> **Draft README for v2: not approved and not released.** Status markers below:
+> **Available** = released and usable today; **Soon** = part of v2, which is not released yet.
 
-AINDF is a spec, not a component library. It describes how to write down your
-design system (tokens, components, slots and the rules between them) as JSON
-files that an AI agent can read and check its work against. You keep your own
-tokens, components and brand.
+**Stop slop-factory: upgrade your design system with the AI-Native Design Framework.**
+
+*“You’re absolutely right, I ignored your design system and hardcoded UI. Again.”*
+AINDF is for design-system owners and the teams whose agents build screens from it, so that this answer stops
+being normal. It works in the agent you already use: Codex, Claude Code or Cursor.
+
+AINDF is a spec, not a component library. You keep your own tokens, components and brand.
 
 Website: https://aindf.oleg.design
 
-## What's in this repo
+## What you get
 
-- [`SPEC.md`](SPEC.md): the spec itself.
-- [`schemas/`](schemas): JSON Schemas for the files your design system
-  publishes: tokens, taxonomy, slots, applicability, presets and patterns.
-- [`patterns/starter.json`](patterns/starter.json): an example pattern for a
-  newsletter signup section.
-- [`packages/aindf-kit`](packages/aindf-kit): a pilot of the v2 tools (validator,
-  MCP server, builder). It is not released yet and its API may change. It is not
-  published to npm.
+| | |
+|---|---|
+| **Available** | **Your design system stays the single source.** AINDF describes your design system as one model your agent reads: tokens, components, slots and the rules between them, written down as JSON files. |
+| **Soon** | **Your agent looks up what your design system offers instead of guessing.** |
+| **Soon** | **No more “You’re absolutely right… hardcoded again”.** Hardcoded styles are refused when the screen is built, not by one more instruction your agent can ignore. The aim: you explain and fix less. |
+| **Soon** | **Consistent UI at any scale.** The fiftieth screen is built from the same parts as the first. |
+| **Soon** | **One fix updates every matching screen.** Fix a shared piece once and every screen that uses it gets the fix, instead of patching screens one by one. |
 
-The released part is the spec and the schemas: you can check your files against
-them today. The v2 tools are described in [Coming in v2](#coming-in-v2).
+## How it works
+
+Your request goes through your design system’s tokens and components to the screen. A hardcoded value is refused
+and becomes an extension request that waits for you.
+
+1. **Your agent works with your design system, not around it.** It sees what your design system can do and
+   arranges screens from it. It doesn’t hand-write the page’s code, and it can’t change your design system. *Soon*
+2. **Anything your design system doesn’t know is refused.** Screens are built from a fixed version of your design
+   system. Styles, parts or code it doesn’t contain are refused before they ship. Your text and data stay yours to
+   change. *Soon*
+3. **New needs become proposals.** When your design system can’t do something, the agent asks for an extension
+   instead of styling it by hand. It can’t add its own styles or change the checks. *Soon*
+4. **Rules are enforced, not requested.** Your agent can’t skip a requirement or call work ready without proof:
+   the build stops it, not one more instruction. Done, checked and approved are different steps, and approval is
+   yours. *Soon*
+
+## What is in this repo today
+
+| Part | Status | What it is |
+|---|---|---|
+| [`SPEC.md`](SPEC.md) | Available (draft 0.1) | The spec: component layers, tokens, modifiers, presets and patterns. |
+| [`schemas/`](schemas) | Available | JSON Schemas for the files your design system publishes: tokens, taxonomy, slots, applicability, presets and patterns. |
+| [`patterns/starter.json`](patterns/starter.json) | Available | An example pattern for a newsletter signup section. |
+| [`packages/aindf-kit`](packages/aindf-kit) | Pilot, not released | The v2 tools: validator, MCP server and builder. AINDF is piloted on QFactory first. The API may change, and the kit is not published to npm. |
 
 ## Getting started
 
-1. Read [`SPEC.md`](SPEC.md). Sections 3 to 6 cover component layers, tokens,
-   modifiers, presets and patterns.
+1. Read [`SPEC.md`](SPEC.md). Sections 3 to 6 cover component layers, tokens, modifiers, presets and patterns.
 2. Describe your design system in JSON files that follow the schemas.
-3. Check each file with any JSON Schema validator that supports draft 2020-12.
-   With Node installed, this checks the example pattern:
+3. Check each file with any JSON Schema validator that supports draft 2020-12. With Node installed, this checks the
+   example pattern:
 
    ```sh
    npx ajv-cli@5 validate --spec=draft2020 -s schemas/patterns.schema.json -d patterns/starter.json
@@ -37,34 +61,28 @@ them today. The v2 tools are described in [Coming in v2](#coming-in-v2).
 
    Swap in your own schema and data file.
 
-## Coming in v2
-
-The next release adds three tools that work together:
-
-- **MCP server.** Your AI agent looks up what your design system offers
-  (components, slots, variants, tokens) through MCP instead of guessing.
-- **Validator.** Checks a screen config before it is built. It rejects unknown
-  components, slots or modifiers, one-off styles and code inside the config.
-- **Builder.** Builds the screen from that config and a specific version of your
-  design system. The agent edits the config, not HTML, CSS or JSX.
-
-If your design system is missing something, the agent asks for it to be added
-instead of writing its own CSS.
-
-Why it matters: fix something once in the design system and every screen that
-uses it should get the fix.
-
 To hear when v2 is out, watch this repo on GitHub: **Watch → Custom → Releases**.
+
+## Boundaries of the promise
+
+- AINDF v2 aims to give your agent firm rules and checks; it is not yet a proven guarantee against slop.
+- Approval stays with the owner of the design system.
+- Use beyond QFactory and the gains in speed are still being proven.
+
+## For engineers
+
+The contract schemas, the MCP query surface a conforming design system exposes and the conformance rules are in
+[`SPEC.md`](SPEC.md) and [`schemas/`](schemas). The pilot kit, its rule IDs and its limits:
+[`packages/aindf-kit`](packages/aindf-kit) ([`RULES.md`](packages/aindf-kit/RULES.md)).
 
 ## Status
 
-Draft 0.1. The spec may still change before 1.0. The v2 tools in
-`packages/aindf-kit` are a pilot, not a release.
+Draft 0.1. The spec may still change before 1.0. The v2 tools in `packages/aindf-kit` are a pilot, not a release.
 
 ## Contributing
 
-Open an issue or a pull request. If you change a schema, update `SPEC.md` and
-`patterns/starter.json` in the same pull request and run the check above.
+Open an issue or a pull request. If you change a schema, update `SPEC.md` and `patterns/starter.json` in the same
+pull request and run the check above.
 
 ## License
 
