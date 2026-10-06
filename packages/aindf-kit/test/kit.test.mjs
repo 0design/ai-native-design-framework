@@ -147,6 +147,7 @@ test('MCP request-extension: an emoji at the cut stays whole; a lone surrogate f
   assert.equal(bad.structuredContent.code, 'NOT_I_JSON');
   assert.match(bad.structuredContent.message, /^\$\.need: string has a lone surrogate$/);
   assert.equal(puts.length, 1, 'nothing staged for the refused request');
+});
 
 // review of #9 (G11): conformance accepted an object as the default of a number prop
 test('[AINDF-DS-32] a prop default must be a value a screen could set; a valid default passes', async () => {
