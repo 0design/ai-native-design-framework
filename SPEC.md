@@ -173,11 +173,15 @@ compute it: take the parsed bundle without its `bundleSha256` field, serialize
 it with the JSON Canonicalization Scheme ([RFC 8785](https://www.rfc-editor.org/rfc/rfc8785))
 and append one `\n`; the hash is the sha256 of those UTF-8 bytes, in lowercase
 hex. In RFC 8785 terms: object keys sorted at every level by their UTF-16 code
-units (so `"😀"` comes before `"ﬀ"`), array order kept, no whitespace; strings
-written as UTF-8, not escaped, except `"`, `\\` and control characters (`\b`
-`\f` `\n` `\r` `\t`, others as lowercase `\u00xx`); numbers in the ECMAScript
-shortest form (`2`, `1.5`, `1e+21`, `1e-7`; `-0` as `0`). A test vector with a
-fixed hash: `packages/aindf-kit/test/canonical.test.mjs`.
+units (so `"😀"` comes before `"ﬀ"` and `"10"` before `"9"`), array order kept,
+no whitespace; strings written as UTF-8, not escaped, except `"`, `\\` and
+U+0000–U+001F (`\b` `\f` `\n` `\r` `\t`, others as lowercase `\u00xx`; U+007F and
+above are written as they are); numbers in the ECMAScript shortest form (`2`,
+`1.5`, `1e-7`; `-0` as `0`). A bundle must be I-JSON
+([RFC 7493](https://www.rfc-editor.org/rfc/rfc7493)): a lone surrogate, a
+non-finite number or an integer beyond ±(2^53−1) is refused (`NOT_I_JSON`)
+rather than hashed. A test vector with a fixed hash (`a937eb5e…`):
+`packages/aindf-kit/test/canonical.test.mjs`.
 Screens pin it; the MCP server serves it. A bundle whose `kind` is not
 `aindf.ds-bundle`, or whose recomputed hash differs from `bundleSha256`, is
 refused (`BUNDLE_INTEGRITY`). A bundle is only produced from a
