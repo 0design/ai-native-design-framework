@@ -141,7 +141,9 @@ each slot's content), `routeParams` (it reads the parameters of a `[param]`
 route), `states`, `accessibility` notes and `examples` (good and bad). Each example is
 the props of one node of that component, as a screen would set them, with no
 component name, slots or route; a good one must be admitted and a bad one
-refused (a bad one may name the expected code with `$expect`).
+refused. A bad one may add `$expect`, an admission code that must be among
+its refusal codes. `$expect` is not a prop: in a good example it is refused
+like any unknown prop.
 
 ### 7.2 Bindings (`bindings`)
 
