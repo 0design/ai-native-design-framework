@@ -1,6 +1,7 @@
 # AI-Native Design Framework (AINDF) — Specification
 
-**Version:** 0.1.0 · **Status:** Draft
+**Version:** 0.2.0-draft · **Status:** Draft (0.1.0 is the released version; 0.2 is implemented only as a pilot in
+[`packages/aindf-kit`](packages/aindf-kit) and may change)
 
 AINDF is a specification for building design systems that an AI agent can
 **discover, reason about, generate, and validate** without a human in the
@@ -47,6 +48,10 @@ declared once in a machine-readable source and enforced by the validator.
 
 The graph is traversable in both directions (a slot's allowed content, and the
 slots a component may fill) and is the data an AINDF MCP server exposes.
+
+*0.2 adds two sources and one authored artifact on top of this graph:* closed
+**component contracts** (§7.1), named **bindings** (§7.2), and the **ScreenSpec**
+(§7.3), the only file a screen author writes.
 
 ## 3. Axes
 
@@ -113,14 +118,112 @@ not built yet (patterns therefore drive what to build next). Schema:
 > **prompt** (intent) → **skill** (procedure) → **pattern** (parametrized
 > recipe) → **preset** (bound instance) → **component** (primitive).
 
-## 7. Single source → generation
+## 7. Screens from contracts *(new in 0.2)*
 
-A conformant system declares its contracts once (the five sources of §8) and
+0.1 describes what a design system offers. 0.2 adds how a screen is authored
+against it, and why the result can be checked: the author writes data, never
+markup, styles or code, and that data is admitted against one exact revision of
+the design system.
+
+### 7.1 Component contracts (`components`)
+
+Every component an author may place has a **closed contract**: its export name
+in the implementation module, and every prop the author may set with a closed
+type — `text`, `enum`, `boolean`, `number`, `textList`, `binding`, `richText` —
+plus its limits (`maxLength`, `minItems`/`maxItems`, `minimum`/`maximum`, enum
+`values`, allowed `bindings`, rich-text `marks`, `inlineComponents`,
+`hrefPattern`). Anything undeclared is rejected: `className`, `style`,
+`children`, handlers and markup cannot be declared as author props at all.
+
+A contract MAY also declare: `template` (it can frame a whole screen; the
+screen's sections render as its children), `slotProps` (which prop receives
+each slot's content), `routeParams` (it reads the parameters of a `[param]`
+route), `states`, `accessibility` notes and `examples` (good and bad).
+
+### 7.2 Bindings (`bindings`)
+
+Data and behaviour live in the design system's implementation, never in a
+screen. The design system declares named **bindings**, each of one kind:
+
+| Kind | What it is | Where a screen uses it |
+|---|---|---|
+| `data` | a value the system provides (e.g. metadata text) | `meta.title` / `meta.description` |
+| `action` | a side effect behind a component | a `binding` prop, from its allowlist |
+| `params` | the static parameters of a `[param]` route | `params.binding` |
+
+A screen refers to a binding by name only.
+
+### 7.3 ScreenSpec (`screen`)
+
+A ScreenSpec is a JSON document with a `route`, one `template` node and ordered
+`sections`. Each node names a component, sets declared props and fills declared
+slots with further nodes. It is **pinned** to one design-system revision by
+`ds.id`, `ds.version` and `ds.bundleSha256` (§7.4). It contains no markup,
+styles, code or undeclared fields.
+
+### 7.4 Bundle and pin
+
+A design system revision is published as an immutable **bundle**: its config
+and every contract source in one document, addressed by the sha256 of its
+canonical JSON (`bundleSha256`). Screens pin it; the MCP server serves it; a
+bundle whose bytes do not match its hash is refused. A bundle is only produced
+from a design system that passes conformance (§9).
+
+### 7.5 Admission
+
+Admission checks one ScreenSpec against one bundle and returns either `ok` or a
+list of errors, each with a stable code and a path, so an agent can repair the
+screen without reading source. It refuses, among others: a screen pinned to
+another revision; unknown components, props, slots or fields; a non-template in
+the template position; a non-`sections` component as a section; slot content the
+slot does not accept or outside its cardinality; values outside their type and
+limits; unknown or wrong-kind bindings; route parameters that do not match the
+route. Codes: [`RULES.md`](packages/aindf-kit/RULES.md), `AINDF-SCR-*`.
+
+### 7.6 Build and states
+
+A **trusted builder** — not the author — generates code from admitted screens
+and the pinned bundle. Generated files are marked, and the check mode (`aindf build --check`) compares
+them with what the screens and the bundle produce:
+a hand edit, a stale screen, a changed bundle or an orphan page fails
+(`AINDF-BLD-*`). Each build writes a **receipt** that binds the screen bytes,
+the bundle and the generated output.
+
+Results move through states that are never merged:
+**built** (the builder wrote the receipt) → **verified** (an independent check
+passed) → **accepted** (the owner accepted it) → **released**. The builder only
+ever writes `built`; a receipt is not a signature and not acceptance.
+
+The pilot generates Next.js App Router pages (`implementation.framework:
+"next-app"`) that import components from one module only,
+`implementation.module`, owned by the design system.
+
+### 7.7 Instance on Core
+
+A design system (an **Instance**) may extend another one (a **Core**). It pins
+the Core by `ds.core` (`id@version`), `ds.coreBundle` (path to the Core bundle)
+and `ds.coreBundleSha256` (its content hash). Screens import only the Instance
+module, so the Instance provides every Core role under the same contract name.
+Conformance then holds each such contract to the Core one, so a screen written
+for the Core admits against the Instance unchanged: no Core prop, value,
+binding, limit, slot, component or placement is narrowed, and anything the
+Instance adds is optional. One exception is deliberate: what a slot *accepts* is
+decided by the Instance (`AINDF-DS-29`, `AINDF-DS-30`).
+
+### 7.8 Requests instead of workarounds
+
+When the design system lacks something, the author does not write its own
+markup or styles: it asks for an extension (`request-extension`, §9). The
+missing capability becomes work for the design-system owner.
+
+## 8. Single source → generation
+
+A conformant system declares its contracts once (the sources of §9) and
 generates every downstream artifact from them: agent docs, type definitions,
 lint rules, and MCP responses. Hand-maintaining any generated artifact breaks
 conformance, because drift means an agent reads a stale contract.
 
-## 8. Conformance
+## 9. Conformance
 
 A design system claims **AINDF 0.1 conformance** when it:
 
@@ -136,7 +239,28 @@ A design system claims **AINDF 0.1 conformance** when it:
    `applicable-modifiers`, `get-preset`);
 7. passes the AINDF conformance validator with no errors.
 
-## 9. Boundary
+A design system claims **AINDF 0.2 conformance** (`conformsTo: "aindf@0.2"`,
+draft) when, in addition:
+
+8. it publishes an `aindf.config.json` naming its identity, every source, and
+   its `implementation` (framework and module);
+9. every classified component has a closed contract (`components`) and every
+   contract is classified; no contract declares a forbidden prop;
+10. every binding a contract, screen meta or params refers to is declared
+    (`bindings`), and every `binding` prop has an allowlist;
+11. it publishes revisions as bundles (§7.4) and admits screens only against a
+    pinned bundle (§7.5);
+12. its MCP server also exposes `get-ds`, `get-component` and `validate-screen`;
+    staging tools (`submit-screen`, `request-extension`) need an author token and
+    never build, verify, accept or release;
+13. as an Instance on a Core, it passes the Core checks of §7.7.
+
+Every failure has a stable rule ID and code; nothing is ignored or auto-fixed.
+The full list: [`packages/aindf-kit/RULES.md`](packages/aindf-kit/RULES.md).
+Schemas: 0.1 in [`schemas/`](schemas), 0.2 additions in
+[`packages/aindf-kit/schema/0.2`](packages/aindf-kit/schema/0.2).
+
+## 10. Boundary
 
 AINDF contains **schemas, validator, MCP protocol, generators, and an empty
 reference theme — and nothing else**. It carries no palette, no fixed modifier
@@ -144,13 +268,16 @@ set, and no component library. Conformance test: *could a completely different
 design system — its own tokens, components, and modifier vocabulary — be built
 using only AINDF?* If yes, the boundary is clean.
 
-## 10. Versioning
+## 11. Versioning
 
 AINDF uses semver. A conforming system pins the AINDF version it targets
-(`conformsTo: "aindf@0.1"`). The dependency arrow is one-way:
+(`conformsTo: "aindf@0.1"` or, for the 0.2 draft, `"aindf@0.2"`). A screen pins
+one exact design-system revision (§7.4); a new revision means re-admitting the
+screens against it. The dependency arrow is one-way:
 **implementation → design system → framework**, never the reverse.
 
 ---
 
-*Draft 0.1. The spec may still change before 1.0. Version 1.0 will come
-after at least one real design system has been built on it.*
+*Draft. 0.1 is released; 0.2 is a draft implemented only as a pilot. The spec may
+still change before 1.0. Version 1.0 will come after at least one real design
+system has been built on it.*
