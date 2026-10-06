@@ -15,7 +15,7 @@ const stream = (chunks, size) => { const s = { pulled: 0 }; s.body = new Readabl
 
 test('valid small request is answered (control)', async () => {
   calls.length = 0; const r = await handler(post(list(0)));
-  assert.equal(r.status, 200); assert.equal((await r.json()).result.tools.length, 9); assert.deepEqual(calls, ['tools/list']);
+  assert.equal(r.status, 200); assert.equal((await r.json()).result.tools.length, 7); assert.deepEqual(calls, ['tools/list']);
 });
 test('a body of exactly the limit passes; one byte more is 413', async () => {
   const exact = list(0); assert.equal((await handler(post(exact + ' '.repeat(LIMIT - exact.length)))).status, 200);

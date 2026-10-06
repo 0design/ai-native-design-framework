@@ -15,6 +15,19 @@ const TOOLS = [
   { name: 'submit-screen', description: 'Stage an admitted ScreenSpec as an unaccepted draft for the trusted builder. Requires an author token. Staging is write-once; it never builds, verifies, accepts or releases.', inputSchema: obj({ screen: { type: 'object' }, note: { type: 'string', maxLength: 500 } }, ['screen']) },
   { name: 'request-extension', description: 'Ask the DS owner for a missing capability instead of working around the contract. Requires an author token.', inputSchema: obj({ need: { type: 'string', maxLength: 2000 }, route: { type: 'string' }, components: { type: 'array', items: { type: 'string' } } }, ['need']) },
 ];
+// MCP tool annotations: a human title and the hints catalogs and clients rely on. Reads touch only the pinned bundle
+// (closed world). The two staging tools add write-once drafts (same input -> same key), never change or delete anything.
+const READ = { readOnlyHint: true, openWorldHint: false };
+const STAGE = { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false };
+const ANNOTATIONS = {
+  'get-ds': { title: 'Get design system', ...READ }, 'list-by-facet': { title: 'List components by facet', ...READ },
+  'get-component': { title: 'Get component contract', ...READ }, 'slot-accepts': { title: 'What a slot accepts', ...READ },
+  'applicable-modifiers': { title: 'Applicable modifiers', ...READ }, 'get-preset': { title: 'Get preset', ...READ },
+  'validate-screen': { title: 'Validate screen', ...READ },
+  'submit-screen': { title: 'Submit screen draft', ...STAGE }, 'request-extension': { title: 'Request design system extension', ...STAGE },
+};
+const STAGING_TOOLS = new Set(['submit-screen', 'request-extension']);
+const ANNOTATED = TOOLS.map(t => ({ ...t, title: ANNOTATIONS[t.name].title, annotations: ANNOTATIONS[t.name] }));
 const text = value => ({ content: [{ type: 'text', text: JSON.stringify(value, null, 2) }], structuredContent: value });
 // Cut by code points, never inside a surrogate pair (a cut emoji would leave a lone surrogate the server then refuses).
 const clip = (s, n) => Array.from(s).slice(0, n).join('');
@@ -68,7 +81,8 @@ export function createDsMcp(bundle, { staging = null, serverName = `aindf-ds-${b
     if (!('id' in message)) return null; // notifications
     if (method === 'initialize') return reply({ protocolVersion: PROTOCOL_VERSION, capabilities: { tools: { listChanged: false } }, serverInfo: { name: serverName, version: `${bundle.ds.version}+${bundle.bundleSha256.slice(0, 12)}` }, instructions: `AINDF ${bundle.conformsTo} design-system MCP for ${bundle.ds.id}@${bundle.ds.version}. You author screens only as ScreenSpec JSON pinned to get-ds.pin. Never write HTML, CSS, JSX or code; request-extension when a capability is missing. validate-screen before submit-screen. You cannot build, verify, accept or release.` });
     if (method === 'ping') return reply({});
-    if (method === 'tools/list') return reply({ tools: TOOLS });
+    // without staging the two staging tools only answer READ_ONLY, so they are not offered (a direct call still is)
+    if (method === 'tools/list') return reply({ tools: staging ? ANNOTATED : ANNOTATED.filter(t => !STAGING_TOOLS.has(t.name)) });
     if (method === 'tools/call') {
       const result = await call(params?.name, params?.arguments, auth);
       return result ? reply(result) : { jsonrpc: '2.0', id, error: { code: -32602, message: `Unknown tool ${params?.name}` } };
