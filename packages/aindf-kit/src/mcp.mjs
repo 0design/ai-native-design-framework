@@ -43,7 +43,7 @@ export function createDsMcp(bundle, { staging = null, serverName = `aindf-ds-${b
         if (!principal) return toolError('UNAUTHORIZED', 'an author token is required (Authorization: Bearer ...)');
         if (name === 'request-extension') {
           const record = { kind: 'aindf.extension-request', ds: bundlePin(bundle), principal, need: String(args.need ?? '').slice(0, 2000), route: args.route ?? null, components: Array.isArray(args.components) ? args.components.map(String).slice(0, 20) : [] };
-          const id = sha256(record);
+          let id; try { id = sha256(record); } catch (e) { if (e.code) return toolError(e.code, e.message); throw e; }
           await staging.put(`extension-requests/${bundle.ds.id}/${id}.json`, JSON.stringify(record, null, 2) + '\n');
           return text({ ok: true, id, state: 'requested' });
         }
