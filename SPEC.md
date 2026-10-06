@@ -288,9 +288,12 @@ Schemas: 0.1 in [`schemas/`](schemas), 0.2 additions in
 
 ## 10. Boundary
 
-AINDF contains **schemas, validator, MCP protocol, generators, and an empty
-reference theme — and nothing else**. It carries no palette, no fixed modifier
-set, and no component library. Conformance test: *could a completely different
+AINDF is meant to contain **schemas, a validator, an MCP protocol, generators
+and an empty reference theme — and nothing else**. Today this repository holds
+the spec and the schemas; the validator, the MCP server and one generator
+(Next.js pages) exist only as a pilot in `packages/aindf-kit`; there is no
+reference theme yet. It carries no palette, no fixed modifier set and no
+component library. Conformance test: *could a completely different
 design system — its own tokens, components, and modifier vocabulary — be built
 using only AINDF?* If yes, the boundary is clean.
 
