@@ -3,7 +3,7 @@
 // only through what a consumer gets — the `aindf` bin, the package exports and the MCP over stdio. Every step has a
 // positive and a negative; a failure exits 1. Prints the exact tarball (name, sha256) and kit version it checked.
 import { execFileSync, spawn } from 'node:child_process';
-import { mkdtempSync, mkdirSync, cpSync, readFileSync, writeFileSync, existsSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, cpSync, readFileSync, writeFileSync, readdirSync, rmSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -21,6 +21,17 @@ const run = (args, opts = {}) => {
   catch (e) { return { code: e.status, out: `${e.stdout ?? ''}${e.stderr ?? ''}` }; }
 };
 const json = (path, value) => writeFileSync(path, JSON.stringify(value, null, 2) + '\n');
+// What a dependency-free install looks like: the package declares no dependencies of any kind, and the consumer's
+// node_modules holds the kit and npm's own files only (npm hoists dependencies to the top, not under the package).
+const DEP_FIELDS = ['dependencies', 'optionalDependencies', 'peerDependencies', 'bundleDependencies', 'bundledDependencies'];
+const installProblems = dir => {
+  const pkg = JSON.parse(readFileSync(join(dir, 'node_modules/@aindf/kit/package.json'), 'utf8'));
+  return [...DEP_FIELDS.filter(f => pkg[f] && Object.keys(pkg[f]).length).map(f => `package.json declares ${f}`),
+    ...readdirSync(join(dir, 'node_modules')).filter(n => !['@aindf', '.bin', '.package-lock.json'].includes(n)).map(n => `node_modules/${n}`),
+    ...readdirSync(join(dir, 'node_modules/@aindf')).filter(n => n !== 'kit').map(n => `node_modules/@aindf/${n}`)];
+};
+const EXPORTS_PROBE = "const k = await import('@aindf/kit'); const m = await import('@aindf/kit/mcp'); console.log(['checkDs','admitScreen','createBundle','coreConformance'].every(n => typeof k[n] === 'function') && typeof m.createDsMcp === 'function')";
+const exportsOk = dir => { try { return execFileSync(process.execPath, ['--input-type=module', '-e', EXPORTS_PROBE], { cwd: dir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim() === 'true'; } catch { return false; } };
 
 try {
   // 1. Pack and install into an empty project, outside the repository
@@ -31,9 +42,15 @@ try {
   json(join(project, 'package.json'), { name: 'consumer', private: true, type: 'module' });
   execFileSync('npm', ['install', tarball, '--ignore-scripts', '--no-audit', '--no-fund', '--prefer-offline'], { cwd: project, stdio: 'ignore' });
   const installed = JSON.parse(readFileSync(join(project, 'node_modules/@aindf/kit/package.json'), 'utf8'));
-  step('install: the tarball installs with no dependencies and is the source version', () => {
+  step('install: the tarball is the source version and installs nothing else; a dependency is caught', () => {
     assert.equal(installed.version, source.version);
-    assert.ok(!existsSync(join(project, 'node_modules/@aindf/kit/node_modules')));
+    assert.deepEqual(installProblems(project), []);
+    // negative: the same install with a declared and hoisted dependency (what npm does for a real one)
+    const fake = join(work, 'with-dependency');
+    cpSync(join(project, 'node_modules'), join(fake, 'node_modules'), { recursive: true });
+    json(join(fake, 'node_modules/@aindf/kit/package.json'), { ...installed, dependencies: { 'left-pad': '1.3.0' } });
+    mkdirSync(join(fake, 'node_modules/left-pad'));
+    assert.deepEqual(installProblems(fake), ['package.json declares dependencies', 'node_modules/left-pad']);
   });
 
   // 2. check: the fixture passes; a DS with an unknown binding fails with its code and exit 1
@@ -76,11 +93,14 @@ try {
   });
 
   // 4. package exports resolve from the consumer project
-  step('exports: @aindf/kit and @aindf/kit/mcp import from the installed package', () => {
-    const out = execFileSync(process.execPath, ['--input-type=module', '-e',
-      "const k = await import('@aindf/kit'); const m = await import('@aindf/kit/mcp'); console.log(['checkDs','admitScreen','createBundle','coreConformance'].every(n => typeof k[n] === 'function') && typeof m.createDsMcp === 'function')"],
-      { cwd: project, encoding: 'utf8' }).trim();
-    assert.equal(out, 'true');
+  step('exports: @aindf/kit and @aindf/kit/mcp import from the installed package; a missing export is caught', () => {
+    assert.ok(exportsOk(project));
+    // negative: the same install without the ./mcp export
+    const fake = join(work, 'without-mcp-export');
+    cpSync(project, fake, { recursive: true });
+    const { './mcp': _, ...rest } = installed.exports;
+    json(join(fake, 'node_modules/@aindf/kit/package.json'), { ...installed, exports: rest });
+    assert.equal(exportsOk(fake), false);
   });
 
   // 5. MCP over stdio: the pin it serves is the bundle's; validate-screen accepts the pinned screen and refuses a broken one
