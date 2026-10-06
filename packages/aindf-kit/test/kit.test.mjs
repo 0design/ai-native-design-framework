@@ -131,3 +131,20 @@ test('review 0d3e7edd: template slots are rendered, not dropped', () => {
   const ds = load(); ds.sources.components.components[0].slotProps = { banner: 'children' };
   assert.ok(checkDs(ds).some(e => e.code === 'TEMPLATE_CHILDREN_SLOT'));
 });
+
+// review of #9: a 2000-character cut by UTF-16 units split an emoji, the server built a lone surrogate itself and
+// refused its own record; the cut is by code points now, and a client's lone surrogate is a tool error, not a crash
+test('MCP request-extension: an emoji at the cut stays whole; a lone surrogate from the client is a tool error and nothing is staged', async () => {
+  const puts = [];
+  const staging = { authorize: () => 'author-1', put: async (key, bytes) => { puts.push({ key, bytes }); return { created: true }; } };
+  const handle = createDsMcp(bundle, { staging });
+  const call = async args => (await handle({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'request-extension', arguments: args } }, { auth: 't' })).result;
+  const ok = await call({ need: 'x'.repeat(1999) + '😀tail' });
+  assert.equal(ok.structuredContent.ok, true, JSON.stringify(ok));
+  assert.equal(JSON.parse(puts[0].bytes).need, 'x'.repeat(1999) + '😀');
+  const bad = await call({ need: 'broken \ud800' });
+  assert.equal(bad.isError, true);
+  assert.equal(bad.structuredContent.code, 'NOT_I_JSON');
+  assert.match(bad.structuredContent.message, /^\$\.need: string has a lone surrogate$/);
+  assert.equal(puts.length, 1, 'nothing staged for the refused request');
+});

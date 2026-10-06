@@ -25,6 +25,7 @@ test('canonical JSON refuses values outside I-JSON with NOT_I_JSON and a path', 
     ['NaN', [NaN], '$[0]'],
     ['integer beyond 2^53 − 1 (9007199254740993 parses rounded)', { n: JSON.parse('9007199254740993') }, '$.n'],
     ['1e21 is an integer beyond 2^53 − 1', [1e21], '$[0]'],
+    ['1.5e300: every number with |x| > 2^53 − 1 (AINDF profile)', [-1.5e300], '$[0]'],
   ]) assert.throws(() => canonicalJson(value), e => e.code === 'NOT_I_JSON' && e.path === path, why);
 });
 
