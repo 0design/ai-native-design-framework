@@ -168,10 +168,13 @@ styles, code or undeclared fields.
 
 A design system revision is published as an immutable **bundle**: its identity
 (`ds`), `conformsTo`, `implementation` and every contract source in one
-document, addressed by `bundleSha256` — the sha256 of its canonical JSON
-(object keys sorted at every level, no whitespace, a trailing `\n`). Screens pin
-it; the MCP server serves it. A bundle whose hash, recomputed from its parsed
-JSON, differs from `bundleSha256` is refused. A bundle is only produced from a
+document with `kind: "aindf.ds-bundle"`, addressed by `bundleSha256`. To
+compute it: take the parsed bundle without its `bundleSha256` field, write it
+as canonical JSON (object keys sorted at every level, array order kept, no
+whitespace, a trailing `\n`) and take the sha256 of those UTF-8 bytes, in hex.
+Screens pin it; the MCP server serves it. A bundle whose `kind` is not
+`aindf.ds-bundle`, or whose recomputed hash differs from `bundleSha256`, is
+refused (`BUNDLE_INTEGRITY`). A bundle is only produced from a
 design system that passes conformance (§9). The design-system maintainer
 produces it (`aindf bundle`) and publishes it wherever its builder and MCP
 server read it from; AINDF does not prescribe a registry.
@@ -186,7 +189,8 @@ the template position; a non-`sections` component as a section; slot content the
 slot does not accept or outside its cardinality; values outside their type and
 limits; a binding prop outside its allowlist; a `params` or `meta` binding that
 is unknown or not of kind `params` / `data`; route parameters that do not match
-the route. Codes: [`RULES.md`](packages/aindf-kit/RULES.md), `AINDF-SCR-*`.
+the route. Codes: [`RULES.md`](packages/aindf-kit/RULES.md), `AINDF-SCR-*`, and
+`UNKNOWN_BINDING` (`AINDF-DS-14`) for bindings.
 
 ### 7.6 Build and states
 
@@ -278,8 +282,9 @@ draft) when, in addition:
 13. as an Instance on a Core, it passes the Core checks of §7.7.
 
 A broken rule fails with a stable rule ID and code; nothing is ignored, and the
-kit never fixes a source or a screen on its own. Two limits of the pilot: a file
-that is not valid JSON fails with the parser's error, not a rule code; and
+kit never fixes a source or a screen on its own. Limits of the pilot, for
+example: a file that is missing or not valid JSON fails with the system's or the
+parser's error, not a rule code; and
 `aindf repin` rewrites the `ds` pin of screens — on explicit request, and only
 for screens that admit against the new revision.
 The full list: [`packages/aindf-kit/RULES.md`](packages/aindf-kit/RULES.md).

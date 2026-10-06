@@ -20,7 +20,7 @@ a retired rule keeps its ID. `test/rules.test.mjs` fails when the kit emits a co
 | AINDF-DS-11 | `INVALID_PROP_NAME` | prop name is not a camelCase identifier or is reserved (key/ref/routeParams) |
 | AINDF-DS-12 | `FORBIDDEN_PROP` | className/style/children/markup/handlers declared as author props |
 | AINDF-DS-13 | `ENUM_WITHOUT_VALUES` | enum prop without values |
-| AINDF-DS-14 | `UNKNOWN_BINDING` | prop, screen meta or params refer to a binding the DS does not declare |
+| AINDF-DS-14 | `UNKNOWN_BINDING` | `aindf check`: a binding prop's allowlist names a binding the DS does not declare. The same code at admission (`validate-screen`, `aindf build`): a screen sets a binding prop outside its allowlist, or its `meta` / `params` names a binding that is unknown or not of kind `data` / `params` |
 | AINDF-DS-15 | `BINDING_WITHOUT_ALLOWLIST` | binding prop without an allowlist |
 | AINDF-DS-16 | `INVALID_HREF_PATTERN` | richText href pattern is not a valid expression |
 | AINDF-DS-17 | `UNKNOWN_SLOT_PROP` | slotProps names a slot that is not declared |
