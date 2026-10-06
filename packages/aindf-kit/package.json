@@ -1,6 +1,6 @@
 {
   "name": "@aindf/kit",
-  "version": "0.2.0-pilot.5",
+  "version": "0.2.0-pilot.6",
   "private": true,
   "description": "AINDF v2 kit: conformance check, immutable DS bundle, ScreenSpec admission, Next.js codegen and a DS MCP server for any design system.",
   "type": "module",
