@@ -169,9 +169,15 @@ styles, code or undeclared fields.
 A design system revision is published as an immutable **bundle**: its identity
 (`ds`), `conformsTo`, `implementation` and every contract source in one
 document with `kind: "aindf.ds-bundle"`, addressed by `bundleSha256`. To
-compute it: take the parsed bundle without its `bundleSha256` field, write it
-as canonical JSON (object keys sorted at every level, array order kept, no
-whitespace, a trailing `\n`) and take the sha256 of those UTF-8 bytes, in hex.
+compute it: take the parsed bundle without its `bundleSha256` field, serialize
+it with the JSON Canonicalization Scheme ([RFC 8785](https://www.rfc-editor.org/rfc/rfc8785))
+and append one `\n`; the hash is the sha256 of those UTF-8 bytes, in lowercase
+hex. In RFC 8785 terms: object keys sorted at every level by their UTF-16 code
+units (so `"😀"` comes before `"ﬀ"`), array order kept, no whitespace; strings
+written as UTF-8, not escaped, except `"`, `\\` and control characters (`\b`
+`\f` `\n` `\r` `\t`, others as lowercase `\u00xx`); numbers in the ECMAScript
+shortest form (`2`, `1.5`, `1e+21`, `1e-7`; `-0` as `0`). A test vector with a
+fixed hash: `packages/aindf-kit/test/canonical.test.mjs`.
 Screens pin it; the MCP server serves it. A bundle whose `kind` is not
 `aindf.ds-bundle`, or whose recomputed hash differs from `bundleSha256`, is
 refused (`BUNDLE_INTEGRITY`). A bundle is only produced from a
