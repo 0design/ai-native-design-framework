@@ -2,14 +2,13 @@
 
 > **Draft README for v2: not approved and not released.** Status markers below:
 > **Available** = published and usable today; **Pilot, not released** = in this repo, being tried on QFactory first;
-> **Soon** = part of v2, which is not released yet. Sentences marked *[new copy]* are not on the AINDF landing yet and
-> need the owner's decision.
+> **Soon** = part of v2, which is not released yet.
 
 **Stop slop-factory: upgrade your design system with the AI-Native Design Framework.**
 
 *“You’re absolutely right, I ignored your design system and hardcoded UI. Again.”*
 AINDF is for design-system owners and the teams whose agents build screens from it, so that this answer stops
-being normal. *[new copy]*
+being normal.
 
 AINDF is a spec, not a component library. You keep your own tokens, components and brand.
 
@@ -48,7 +47,7 @@ refused and becomes an extension request that waits for you.
 | [`SPEC.md`](SPEC.md) | Available (draft 0.1) | The spec: component layers, tokens, modifiers, presets and patterns. |
 | [`schemas/`](schemas) | Available | JSON Schemas for the files your design system publishes: tokens, taxonomy, slots, applicability, presets and patterns. |
 | [`patterns/starter.json`](patterns/starter.json) | Available | An example pattern for a newsletter signup section. |
-| [`packages/aindf-kit`](packages/aindf-kit) | Pilot, not released | The v2 tools: validator, MCP server and builder. AINDF is piloted on QFactory first. The API may change, and the kit is not published to npm. *[new copy]* |
+| [`packages/aindf-kit`](packages/aindf-kit) | Pilot, not released | The v2 tools: validator, MCP server and builder. AINDF is piloted on QFactory first. The API may change, and the kit is not published to npm. |
 
 ## Getting started
 
