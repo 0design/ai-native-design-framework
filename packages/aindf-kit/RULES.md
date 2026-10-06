@@ -38,6 +38,7 @@ a retired rule keeps its ID. `test/rules.test.mjs` fails when the kit emits a co
 | AINDF-DS-29 | `CORE_PIN` | the Core bundle is not the one pinned in ds.core (id@version) and ds.coreBundleSha256 (content) |
 | AINDF-DS-30 | `CORE_CONFORMANCE` | an Instance contract reusing a Core component name accepts less than the Core contract (a prop dropped, another type, required-ness changed, an enum value / binding / mark / inline component dropped, a tighter maxLength / item count / number range, another link pattern, a slot prop dropped), moves the role (a template no longer a template, `routeParams` added, another taxonomy layer, a Core slot dropped or its cardinality tightened), drops a Core component or binding (or changes the kind of a `params` / `data` binding), or adds a required prop or a required slot; a narrower slot `accepts` is deliberately not checked |
 | AINDF-DS-31 | `NOT_I_JSON` | a value to be hashed (bundle, extension request) is outside the AINDF profile of I-JSON: a lone surrogate, a non-finite number, or any number with \|x\| > 2^53−1 (every such double is an integer, e.g. 1e21, 1.5e300; stricter than I-JSON/JCS). Duplicate keys are not detected: JSON.parse keeps the last one |
+| AINDF-DS-32 | `INVALID_DEFAULT` | a prop's `default` is not a value a screen could set for it (another type, outside its values, allowlist or limits) |
 
 ## SCR · Admission of a ScreenSpec (`validate-screen`, `aindf build`, trusted builder)
 

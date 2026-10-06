@@ -22,6 +22,18 @@ export function richTextError(value, def) {
   }
   return null;
 }
+/** One prop value against its contract: null, or { code, message }. Shared by admission and by the DS check of `default`. */
+export function propValueError(def, value) {
+  const text = v => typeof v === 'string' && v.trim().length > 0 && v.length <= (def.maxLength ?? MAX_TEXT);
+  if (def.type === 'text' && !text(value)) return { code: 'INVALID_TEXT', message: `non-empty text up to ${def.maxLength ?? MAX_TEXT} chars` };
+  if (def.type === 'enum' && !(def.values ?? []).includes(value)) return { code: 'INVALID_ENUM', message: `one of ${(def.values ?? []).join(', ')}` };
+  if (def.type === 'boolean' && typeof value !== 'boolean') return { code: 'INVALID_BOOLEAN', message: 'true or false' };
+  if (def.type === 'number' && (typeof value !== 'number' || !Number.isFinite(value) || (def.minimum !== undefined && value < def.minimum) || (def.maximum !== undefined && value > def.maximum))) return { code: 'INVALID_NUMBER', message: 'finite number in range' };
+  if (def.type === 'binding' && !(def.bindings ?? []).includes(value)) return { code: 'UNKNOWN_BINDING', message: `one of ${(def.bindings ?? []).join(', ')}` };
+  if (def.type === 'richText') { const bad = richTextError(value, def); if (bad) return { code: 'INVALID_RICH_TEXT', message: bad }; }
+  if (def.type === 'textList' && (!Array.isArray(value) || !value.every(text) || value.length < (def.minItems ?? 0) || value.length > (def.maxItems ?? 50))) return { code: 'INVALID_TEXT_LIST', message: `${def.minItems ?? 0}..${def.maxItems ?? 50} non-empty texts` };
+  return null;
+}
 /**
  * Admission of one ScreenSpec against one DS bundle. Pure JSON in, stable-coded errors out.
  * Returns { ok, errors } — errors carry { code, path, message } so an agent can repair without reading source.
@@ -55,14 +67,8 @@ export function admitScreen(bundle, screen) {
       const def = Object.hasOwn(c.props, key) ? c.props[key] : undefined;
       const at = `${path}.props.${key}`;
       if (!def) { err('UNKNOWN_PROP', at, `${n.component} has no prop ${key}; allowed: ${Object.keys(c.props).join(', ') || 'none'}`); continue; }
-      const text = v => typeof v === 'string' && v.trim().length > 0 && v.length <= (def.maxLength ?? MAX_TEXT);
-      if (def.type === 'text' && !text(value)) err('INVALID_TEXT', at, `non-empty text up to ${def.maxLength ?? MAX_TEXT} chars`);
-      if (def.type === 'enum' && !def.values.includes(value)) err('INVALID_ENUM', at, `one of ${def.values.join(', ')}`);
-      if (def.type === 'boolean' && typeof value !== 'boolean') err('INVALID_BOOLEAN', at, 'true or false');
-      if (def.type === 'number' && (typeof value !== 'number' || !Number.isFinite(value) || (def.minimum !== undefined && value < def.minimum) || (def.maximum !== undefined && value > def.maximum))) err('INVALID_NUMBER', at, 'finite number in range');
-      if (def.type === 'binding' && !def.bindings.includes(value)) err('UNKNOWN_BINDING', at, `one of ${def.bindings.join(', ')}`);
-      if (def.type === 'richText') { const bad = richTextError(value, def); if (bad) err('INVALID_RICH_TEXT', at, bad); }
-      if (def.type === 'textList' && (!Array.isArray(value) || !value.every(text) || value.length < (def.minItems ?? 0) || value.length > (def.maxItems ?? 50))) err('INVALID_TEXT_LIST', at, `${def.minItems ?? 0}..${def.maxItems ?? 50} non-empty texts`);
+      const bad = propValueError(def, value);
+      if (bad) err(bad.code, at, bad.message);
     }
     if (c.routeParams && !routeHasParams) err('ROUTE_PARAMS_UNAVAILABLE', `${path}.component`, `${n.component} needs a [param] route`);
     for (const [key, def] of Object.entries(c.props)) if (def.required && !Object.hasOwn(props, key)) err('MISSING_PROP', `${path}.props`, `${n.component} requires ${key}`);
