@@ -2,6 +2,7 @@
 // implementation in another language can check itself, and the I-JSON values that must be refused.
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { fileURLToPath } from 'node:url';
 import { canonicalJson, sha256 } from '../src/util.mjs';
 import { createBundle, verifyBundle, loadDs } from '../src/index.mjs';
 
@@ -30,7 +31,7 @@ test('canonical JSON refuses values outside I-JSON with NOT_I_JSON and a path', 
 });
 
 test('a bundle with integer-like keys hashes in JCS key order (review of #9)', () => {
-  const ds = loadDs(new URL('./fixtures/tiny-ds/aindf.config.json', import.meta.url).pathname);
+  const ds = loadDs(fileURLToPath(new URL('./fixtures/tiny-ds/aindf.config.json', import.meta.url)));
   // a bad example with integer-like (unknown) prop names: legitimate, admission refuses it, so the DS stays conformant
   ds.sources.components.components.find(c => c.name === 'Hero').examples = { bad: [{ 10: 1, 9: 2 }] };
   const bundle = createBundle(ds);

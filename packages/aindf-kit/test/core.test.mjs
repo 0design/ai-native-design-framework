@@ -2,13 +2,14 @@
 // reuses by name, so a screen written for the Core role admits against the Instance unchanged.
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { fileURLToPath } from 'node:url';
 import { mkdtempSync, cpSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { loadDs, checkDs, createBundle, coreConformance } from '../src/index.mjs';
 import { sha256, KIT_VERSION } from '../src/util.mjs';
 
-const tiny = new URL('./fixtures/tiny-ds/', import.meta.url).pathname;
+const tiny = fileURLToPath(new URL('./fixtures/tiny-ds/', import.meta.url));
 const core = createBundle(loadDs(join(tiny, 'aindf.config.json')));
 const pin = `${core.ds.id}@${core.ds.version}`;
 const instanceConfig = { conformsTo: 'aindf@0.2', ds: { id: 'inst', version: '0.1.0', core: pin, coreBundle: 'core.bundle.json', coreBundleSha256: core.bundleSha256 }, implementation: { framework: 'next-app', module: '@inst/ds' } };
