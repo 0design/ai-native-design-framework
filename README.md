@@ -2,7 +2,7 @@
 
 <picture>
   <source media="(prefers-reduced-motion: reduce)" srcset="https://raw.githubusercontent.com/0design/ai-native-design-framework/main/docs/media/before-after.png">
-  <img src="https://raw.githubusercontent.com/0design/ai-native-design-framework/main/docs/media/before-after.gif" width="1200" alt="The same QFactory home page built twice from the same prompt and the same design system. A divider slides between the two. Without AINDF: underline tabs, a plain headline, a plain search field and identical cards. With AINDF: the large two-line hero with the violet search composer and the workflow cover tiles.">
+  <img src="https://raw.githubusercontent.com/0design/ai-native-design-framework/main/docs/media/before-after.gif" width="1200" alt="Before/after slider over the QFactory home page. Left, an illustration of the deviations an agent makes when it bypasses the design system: underline tabs, a plain headline, a plain search field and identical cards. Right, the qfactory.io home page built from QFactory's design system.">
 </picture>
 
 # Get started
@@ -16,21 +16,21 @@
        │
        ▼
   your agent ◀──── MCP ────▶ your design system
-       │            asks what it offers: tokens, components, slots
+       │            asks what it offers: components, slots, modifiers, presets
        ▼
   screen config (JSON, pinned to one version of your design system)
        │
        ▼
-  check ── refused: "Heading has no prop color" ──▶ your agent asks you
-       │                                            to add it to your
-       │ passes                                     design system
+  check ── refused: "Heading has no prop color; …" ──▶ your agent asks you
+       │                                               to add it to your
+       │ passes                                        design system
        ▼
   builder ──▶ a screen built only from your design system
 ```
 
 Without AINDF your agent writes HTML and CSS itself and can ignore your design system. With AINDF the screen is a
-config, and the check passes only what your design system offers. Fix a component in your design system once, and
-every screen built from it gets the fix on the next build.
+config, and the check passes only what your design system offers. Fix how a component looks or works in your design
+system once, and every screen built from it gets the fix on the next build.
 
 ## What's in this repo
 
@@ -38,7 +38,8 @@ every screen built from it gets the fix on the next build.
 - [`packages/aindf-kit`](packages/aindf-kit): the check, the builder and the MCP server.
 - [`plugin`](plugin): the plugin for Claude Code.
 - [`examples/demo-ds`](examples/demo-ds): a demo design system with three examples you can run.
-- [`schemas`](schemas) and [`patterns`](patterns): JSON Schemas and an example pattern.
+- [`schemas`](schemas) and [`patterns`](patterns): the JSON Schemas of version 0.1 and an example pattern. The 0.2
+  schemas are in [`packages/aindf-kit/schema/0.2`](packages/aindf-kit/schema/0.2).
 
 ## Contribute
 
