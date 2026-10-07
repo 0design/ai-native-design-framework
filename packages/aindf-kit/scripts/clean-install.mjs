@@ -7,9 +7,10 @@ import { mkdtempSync, mkdirSync, cpSync, readFileSync, writeFileSync, readdirSyn
 import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import assert from 'node:assert/strict';
 
-const kitDir = new URL('..', import.meta.url).pathname;
+const kitDir = fileURLToPath(new URL('..', import.meta.url)); // not .pathname: a space would be %20
 const fixture = join(kitDir, 'test/fixtures/tiny-ds');
 const source = JSON.parse(readFileSync(join(kitDir, 'package.json'), 'utf8'));
 const work = mkdtempSync(join(tmpdir(), 'aindf-clean-install-'));

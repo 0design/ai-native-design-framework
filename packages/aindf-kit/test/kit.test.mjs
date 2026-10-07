@@ -152,7 +152,7 @@ test('MCP request-extension: an emoji at the cut stays whole; a lone surrogate f
 // review of #9 (G11): conformance accepted an object as the default of a number prop
 test('[AINDF-DS-32] a prop default must be a value a screen could set; a valid default passes', async () => {
   const { loadDs, checkDs } = await import('../src/index.mjs');
-  const fresh = () => loadDs(new URL('./fixtures/tiny-ds/aindf.config.json', import.meta.url).pathname);
+  const fresh = () => loadDs(fileURLToPath(new URL('./fixtures/tiny-ds/aindf.config.json', import.meta.url)));
   const at = (ds, name, prop) => ds.sources.components.components.find(c => c.name === name).props[prop];
   const ok = fresh(); at(ok, 'Hero', 'tone').default = at(ok, 'Hero', 'tone').values[0];
   ok.sources.components.components.find(c => c.name === 'Hero').props.size = { type: 'number', minimum: 0, maximum: 10, default: 10 };
@@ -170,7 +170,7 @@ test('[AINDF-DS-32] a prop default must be a value a screen could set; a valid d
 // review of #10: examples were not checked — an MCP could show a "good" example that admission refuses
 test('[AINDF-DS-33] a good example must admit and a bad one must not; matching examples pass', async () => {
   const { loadDs, checkDs } = await import('../src/index.mjs');
-  const fresh = examples => { const ds = loadDs(new URL('./fixtures/tiny-ds/aindf.config.json', import.meta.url).pathname); ds.sources.components.components.find(c => c.name === 'Cta').examples = examples; return ds; };
+  const fresh = examples => { const ds = loadDs(fileURLToPath(new URL('./fixtures/tiny-ds/aindf.config.json', import.meta.url))); ds.sources.components.components.find(c => c.name === 'Cta').examples = examples; return ds; };
   assert.deepEqual(checkDs(fresh({ good: [{ label: 'Join', action: 'signup' }], bad: [{ label: 'Go', className: 'x' }, { action: 'signup' }] })), []);
   for (const [why, examples, want] of [
     ['good with an unknown prop', { good: [{ label: 'Join', action: 'signup', className: 'x' }] }, 'INVALID_EXAMPLE components.Cta.examples.good[0].props.className'],
@@ -183,7 +183,7 @@ test('[AINDF-DS-33] a good example must admit and a bad one must not; matching e
 // review of #11: a bad example can name the refusal it shows ($expect); without it, any refusal counts
 test('[AINDF-DS-33] a bad example with $expect must be refused with that code', async () => {
   const { loadDs, checkDs } = await import('../src/index.mjs');
-  const fresh = examples => { const ds = loadDs(new URL('./fixtures/tiny-ds/aindf.config.json', import.meta.url).pathname); ds.sources.components.components.find(c => c.name === 'Cta').examples = examples; return ds; };
+  const fresh = examples => { const ds = loadDs(fileURLToPath(new URL('./fixtures/tiny-ds/aindf.config.json', import.meta.url))); ds.sources.components.components.find(c => c.name === 'Cta').examples = examples; return ds; };
   assert.deepEqual(checkDs(fresh({ bad: [{ label: 'Go', className: 'x', $expect: 'UNKNOWN_PROP' }, { action: 'signup', $expect: 'MISSING_PROP' }] })), []);
   assert.deepEqual(checkDs(fresh({ bad: [{ label: 'Go', action: 'signup', className: 'x', $expect: 'MISSING_PROP' }] })).map(e => `${e.code} ${e.path}`), ['INVALID_EXAMPLE components.Cta.examples.bad[0].$expect']);
   assert.deepEqual(checkDs(fresh({ bad: [{ label: 'Go', action: 'signup', $expect: 'UNKNOWN_PROP' }] })).map(e => `${e.code} ${e.path}`), ['INVALID_EXAMPLE components.Cta.examples.bad[0]'], 'an admitted bad example still fails first');
