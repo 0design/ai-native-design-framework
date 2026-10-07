@@ -130,9 +130,10 @@ export function mcpFetchHandler(handle, { maxBodyBytes = DEFAULT_MAX_BODY_BYTES 
     if (text === null) return tooLarge(maxBodyBytes);
     let body; try { body = JSON.parse(text); } catch { return Response.json({ jsonrpc: '2.0', id: null, error: { code: -32700, message: 'Parse error' } }, { status: 400 }); }
     const auth = /^Bearer (.+)$/.exec(request.headers.get('authorization') ?? '')?.[1] ?? null;
-    const batch = Array.isArray(body);
-    const replies = (await Promise.all((batch ? body : [body]).map(m => handle(m, { auth })))).filter(Boolean);
-    if (!replies.length) return new Response(null, { status: 202 });
-    return Response.json(batch ? replies : replies[0], { headers: { 'cache-control': 'no-store' } });
+    // MCP 2025-06-18 removed JSON-RPC batching; a batch would also let a small request fan out into a large reply
+    if (Array.isArray(body)) return Response.json({ jsonrpc: '2.0', id: null, error: { code: -32600, message: 'Invalid Request: batches are not supported' } }, { status: 400, headers: { 'cache-control': 'no-store' } });
+    const reply = await handle(body, { auth });
+    if (!reply) return new Response(null, { status: 202 });
+    return Response.json(reply, { headers: { 'cache-control': 'no-store' } });
   };
 }

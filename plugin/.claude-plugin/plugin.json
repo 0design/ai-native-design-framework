@@ -1,7 +1,7 @@
 {
   "name": "aindf",
   "displayName": "AINDF",
-  "version": "0.2.0-pilot.6",
+  "version": "0.2.0-pilot.7",
   "description": "Build screens only from your design system: your agent looks up what it offers and validates every screen against it, through a local read-only MCP server.",
   "author": { "name": "Oleg.Design", "url": "https://oleg.design" },
   "homepage": "https://github.com/0design/ai-native-design-framework",

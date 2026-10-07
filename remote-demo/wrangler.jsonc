@@ -1,0 +1,11 @@
+{
+  // AINDF remote demo MCP. Test address on workers.dev until the v2 release (owner decision 07.10); no custom domain,
+  // no storage, no bindings, no secrets. Deployed only by .github/workflows/demo-mcp.yml from main.
+  "name": "aindf-demo-mcp",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-10-01",
+  "workers_dev": true,
+  "preview_urls": false,
+  // Cloudflare turns on Workers Logs for new Workers by default; off, so no request is kept
+  "observability": { "enabled": false }
+}
