@@ -13,7 +13,8 @@ The plugin gives your agent two things:
 ## Your design system
 
 Set **Design system bundle** (`bundlePath`) to your design system's AINDF bundle, made with `aindf bundle`. A relative
-path is resolved against the directory the agent starts the server in. Leave it empty to try the demo design system
+path is resolved against the directory the agent starts the server in, which depends on the client: prefer an
+absolute path. Leave it empty to try the demo design system
 shipped with the plugin (`demo/aindf-demo.bundle.json`, described in
 [`examples/demo-ds`](../examples/demo-ds)).
 
