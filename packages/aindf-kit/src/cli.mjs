@@ -27,7 +27,8 @@ try {
     const handle = createDsMcp(verifyBundle(JSON.parse(readFileSync(rest[0], 'utf8'))));
     for await (const line of createInterface({ input: process.stdin })) {
       if (!line.trim()) continue;
-      let reply; try { reply = await handle(JSON.parse(line)); } catch { reply = { jsonrpc: '2.0', id: null, error: { code: -32700, message: 'Parse error' } }; }
+      let message; try { message = JSON.parse(line); } catch { process.stdout.write(JSON.stringify({ jsonrpc: '2.0', id: null, error: { code: -32700, message: 'Parse error' } }) + '\n'); continue; }
+      let reply; try { reply = await handle(message); } catch { reply = { jsonrpc: '2.0', id: message?.id ?? null, error: { code: -32603, message: 'Internal error' } }; }
       if (reply) process.stdout.write(JSON.stringify(reply) + '\n');
     }
   } else { console.error(usage); process.exitCode = 2; }

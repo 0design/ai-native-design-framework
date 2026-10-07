@@ -53,6 +53,15 @@ try {
   assert.equal(own.code, 0, own.err);
   assert.match(own.err, /examples\/demo-ds\/aindf-demo\.bundle\.json, read-only/);
 
+  step = 'other placeholder';
+  const placeholder = await run('${user_config.somethingElse}', []);
+  assert.equal(placeholder.code, 1);
+  assert.match(placeholder.err, /unexpanded placeholder/);
+
+  step = 'read-only instructions';
+  const ro = (await run('', session)).replies[1].result.instructions;
+  assert.doesNotMatch(ro, /request-extension|submit-screen/, 'a read-only server does not point to staging tools');
+
   step = 'missing bundle';
   const missing = await run('does/not/exist.bundle.json', []);
   assert.equal(missing.code, 1);

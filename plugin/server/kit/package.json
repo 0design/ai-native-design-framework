@@ -7,5 +7,5 @@
   "license": "MIT",
   "bin": { "aindf": "./src/cli.mjs" },
   "exports": { ".": "./src/index.mjs", "./mcp": "./src/mcp.mjs", "./schema/*": "./schema/*" },
-  "engines": { "node": ">=20" }
+  "engines": { "node": ">=20.10" }
 }

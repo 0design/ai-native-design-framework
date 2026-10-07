@@ -35,7 +35,7 @@ export function checkDs({ config, sources, core }) {
       if (def.type === 'binding') for (const b of def.bindings ?? []) if (!bindingNames.has(b)) err('UNKNOWN_BINDING', `${at}.props.${p}`, b);
       if (def.type === 'richText' && def.hrefPattern) { try { new RegExp(def.hrefPattern); } catch { err('INVALID_HREF_PATTERN', `${at}.props.${p}`, def.hrefPattern); } }
       if (def.type === 'binding' && !def.bindings?.length) err('BINDING_WITHOUT_ALLOWLIST', `${at}.props.${p}`, 'binding prop needs allowed bindings');
-      // review of #9 (G11): a default is what an agent reads as the value to expect; it must be one a screen could set
+      // a default is what an agent reads as the value to expect; it must be one a screen could set
       if (Object.hasOwn(def, 'default')) { const bad = propValueError(def, def.default); if (bad) err('INVALID_DEFAULT', `${at}.props.${p}.default`, `${bad.code}: ${bad.message}`); }
     }
     for (const slot of Object.keys(c.slotProps ?? {})) if (!slotsets.get(c.name)?.slots.some(s => s.name === slot)) err('UNKNOWN_SLOT_PROP', at, slot);
@@ -112,7 +112,7 @@ export function coreConformance(config, components, core, { taxonomy, slots, bin
   const coreSlots = new Map((core.sources.slots?.slotsets ?? []).map(s => [s.component, s.slots]));
   const ownSlots = new Map((slots?.slotsets ?? []).map(s => [s.component, s.slots]));
   const range = card => card.split('..').map(x => x === '*' ? Infinity : Number(x));
-  // review of #3 (G6/G7): a Core screen may use any Core component and any Core binding — admission fails UNKNOWN_COMPONENT
+  // a Core screen may use any Core component and any Core binding — admission fails UNKNOWN_COMPONENT
   // or UNKNOWN_BINDING otherwise (params/meta bindings are matched by kind)
   const own = new Set(components.components.map(c => c.name));
   for (const name of coreContracts.keys()) {
@@ -121,7 +121,7 @@ export function coreConformance(config, components, core, { taxonomy, slots, bin
   }
   if (bindings) {
     const kinds = new Map(bindings.bindings.map(b => [b.name, b.kind]));
-    // review of #4 (G8): admission reads the kind only for $.params (params) and $.meta (data); a binding a prop names is
+    // admission reads the kind only for $.params (params) and $.meta (data); a binding a prop names is
     // matched by name, so an action binding may change kind
     for (const b of core.sources.bindings?.bindings ?? []) {
       if (!kinds.has(b.name)) fail('CORE_CONFORMANCE', `bindings.${b.name}`, `Core ${pinned} declares this binding (${b.kind})`);
@@ -149,7 +149,7 @@ export function coreConformance(config, components, core, { taxonomy, slots, bin
     }
     for (const [p, def] of Object.entries(c.props)) if (!(p in base.props) && def.required) fail('CORE_CONFORMANCE', `${at}.props.${p}`, 'a prop the Core role does not have must be optional');
     for (const slot of Object.keys(base.slotProps ?? {})) if (!(slot in (c.slotProps ?? {}))) fail('CORE_CONFORMANCE', `${at}.slotProps.${slot}`, `Core ${pinned} declares this slot`);
-    // review of #2 (G4): where a screen may place the role — admission fails NOT_A_TEMPLATE, ROUTE_PARAMS_UNAVAILABLE,
+    // where a screen may place the role — admission fails NOT_A_TEMPLATE, ROUTE_PARAMS_UNAVAILABLE,
     // LAYER_MISMATCH, UNKNOWN_SLOT or SLOT_CARDINALITY on a Core screen otherwise
     if (base.template && !c.template) fail('CORE_CONFORMANCE', `${at}.template`, 'a Core template must stay a template');
     if (c.routeParams && !base.routeParams) fail('CORE_CONFORMANCE', `${at}.routeParams`, 'Core screens may place it on a route without [param]');
@@ -160,7 +160,7 @@ export function coreConformance(config, components, core, { taxonomy, slots, bin
       const [min, max] = range(def.cardinality), [myMin, myMax] = range(mine.cardinality);
       if (myMin > min || myMax < max) fail('CORE_CONFORMANCE', sat, `cardinality ${mine.cardinality} is tighter than Core ${def.cardinality}`);
     }
-    // review of #3 (G5): a slot the Core role does not have must be optional, like a new prop — SLOT_CARDINALITY otherwise
+    // a slot the Core role does not have must be optional, like a new prop — SLOT_CARDINALITY otherwise
     if (slots) for (const mine of ownSlots.get(c.name) ?? [])
       if (!(coreSlots.get(c.name) ?? []).some(s => s.name === mine.name) && range(mine.cardinality)[0] > 0) fail('CORE_CONFORMANCE', `slots.${c.name}.${mine.name}`, `a slot the Core role does not have must be optional (min 0), got ${mine.cardinality}`);
   }

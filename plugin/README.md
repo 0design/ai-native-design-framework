@@ -16,13 +16,13 @@ Set **Design system bundle** (`bundlePath`) to your design system's AINDF bundle
 path is resolved against the directory the agent starts the server in, which depends on the client: prefer an
 absolute path. Leave it empty to try the demo design system
 shipped with the plugin (`demo/aindf-demo.bundle.json`, described in
-[`examples/demo-ds`](../examples/demo-ds)).
+[`examples/demo-ds`](https://github.com/0design/ai-native-design-framework/tree/main/examples/demo-ds)).
 
 ## What the server offers
 
 Seven read-only tools: `get-ds`, `list-by-facet`, `get-component`, `slot-accepts`, `applicable-modifiers`,
-`get-preset` and `validate-screen`. The server records nothing. Recording screen drafts or extension requests for the
-design system's owner is planned for v2.
+`get-preset` and `validate-screen`. The server records nothing: when your design system lacks something, your agent
+tells you, and it gives you the validated screen.
 
 ## Data
 

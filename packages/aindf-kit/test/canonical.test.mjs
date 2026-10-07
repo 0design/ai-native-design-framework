@@ -30,7 +30,7 @@ test('canonical JSON refuses values outside I-JSON with NOT_I_JSON and a path', 
   ]) assert.throws(() => canonicalJson(value), e => e.code === 'NOT_I_JSON' && e.path === path, why);
 });
 
-test('a bundle with integer-like keys hashes in JCS key order (review of #9)', () => {
+test('a bundle with integer-like keys hashes in JCS key order', () => {
   const ds = loadDs(fileURLToPath(new URL('./fixtures/tiny-ds/aindf.config.json', import.meta.url)));
   // a bad example with integer-like (unknown) prop names: legitimate, admission refuses it, so the DS stays conformant
   ds.sources.components.components.find(c => c.name === 'Hero').examples = { bad: [{ 10: 1, 9: 2 }] };

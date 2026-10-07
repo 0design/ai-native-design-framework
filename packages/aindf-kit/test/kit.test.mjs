@@ -132,7 +132,7 @@ test('review 0d3e7edd: template slots are rendered, not dropped', () => {
   assert.ok(checkDs(ds).some(e => e.code === 'TEMPLATE_CHILDREN_SLOT'));
 });
 
-// review of #9: a 2000-character cut by UTF-16 units split an emoji, the server built a lone surrogate itself and
+// a 2000-character cut by UTF-16 units split an emoji, the server built a lone surrogate itself and
 // refused its own record; the cut is by code points now, and a client's lone surrogate is a tool error, not a crash
 test('MCP request-extension: an emoji at the cut stays whole; a lone surrogate from the client is a tool error and nothing is staged', async () => {
   const puts = [];
@@ -149,7 +149,7 @@ test('MCP request-extension: an emoji at the cut stays whole; a lone surrogate f
   assert.equal(puts.length, 1, 'nothing staged for the refused request');
 });
 
-// review of #9 (G11): conformance accepted an object as the default of a number prop
+// conformance accepted an object as the default of a number prop
 test('[AINDF-DS-32] a prop default must be a value a screen could set; a valid default passes', async () => {
   const { loadDs, checkDs } = await import('../src/index.mjs');
   const fresh = () => loadDs(fileURLToPath(new URL('./fixtures/tiny-ds/aindf.config.json', import.meta.url)));
@@ -167,7 +167,7 @@ test('[AINDF-DS-32] a prop default must be a value a screen could set; a valid d
   ]) { const ds = fresh(); mutate(ds); assert.deepEqual(checkDs(ds).map(e => `${e.code} ${e.path}`), [`INVALID_DEFAULT ${path}`], why); }
 });
 
-// review of #10: examples were not checked — an MCP could show a "good" example that admission refuses
+// examples were not checked — an MCP could show a "good" example that admission refuses
 test('[AINDF-DS-33] a good example must admit and a bad one must not; matching examples pass', async () => {
   const { loadDs, checkDs } = await import('../src/index.mjs');
   const fresh = examples => { const ds = loadDs(fileURLToPath(new URL('./fixtures/tiny-ds/aindf.config.json', import.meta.url))); ds.sources.components.components.find(c => c.name === 'Cta').examples = examples; return ds; };
@@ -180,7 +180,7 @@ test('[AINDF-DS-33] a good example must admit and a bad one must not; matching e
   ]) assert.deepEqual(checkDs(fresh(examples)).map(e => `${e.code} ${e.path}`), [want], why);
 });
 
-// review of #11: a bad example can name the refusal it shows ($expect); without it, any refusal counts
+// a bad example can name the refusal it shows ($expect); without it, any refusal counts
 test('[AINDF-DS-33] a bad example with $expect must be refused with that code', async () => {
   const { loadDs, checkDs } = await import('../src/index.mjs');
   const fresh = examples => { const ds = loadDs(fileURLToPath(new URL('./fixtures/tiny-ds/aindf.config.json', import.meta.url))); ds.sources.components.components.find(c => c.name === 'Cta').examples = examples; return ds; };
@@ -207,4 +207,14 @@ test('MCP tools/list: 7 read tools without staging, 9 with it; each has a title 
   assert.ok(ro.every(t => t.annotations.readOnlyHint), 'every tool offered without staging is read-only');
   const direct = (await readOnly({ jsonrpc: '2.0', id: 2, method: 'tools/call', params: { name: 'submit-screen', arguments: {} } })).result;
   assert.equal(direct.isError, true); assert.equal(direct.structuredContent.code, 'READ_ONLY');
+});
+
+test('MCP texts follow the mode: a read-only server never points to the staging tools', async () => {
+  const init = async h => (await h({ jsonrpc: '2.0', id: 1, method: 'initialize', params: {} })).result.instructions;
+  const missing = async h => (await h({ jsonrpc: '2.0', id: 2, method: 'tools/call', params: { name: 'get-component', arguments: { name: 'Nope' } } })).result.structuredContent.message;
+  const readOnly = createDsMcp(bundle), staged = createDsMcp(bundle, { staging: { authorize: () => 'a', put: async () => ({ created: true }) } });
+  assert.doesNotMatch(await init(readOnly), /request-extension|submit-screen/);
+  assert.doesNotMatch(await missing(readOnly), /request-extension/);
+  assert.match(await init(staged), /request-extension/);
+  assert.match(await missing(staged), /request-extension/);
 });
