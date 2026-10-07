@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aindf.oleg.design/schemas/0.2/bindings.schema.json",
+  "title": "AINDF Bindings",
+  "description": "Named data and action adapters implemented by the DS maintainer. A screen may reference a binding by name only; it never supplies code, URLs of arbitrary services or handlers.",
+  "type": "object",
+  "required": [
+    "aindfVersion",
+    "bindings"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "aindfVersion": {
+      "type": "string"
+    },
+    "bindings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "kind",
+          "description"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z][A-Za-z0-9]*$"
+          },
+          "kind": {
+            "enum": [
+              "data",
+              "action",
+              "params"
+            ],
+            "description": "data: value the DS provides (e.g. metadata text); action: side effect behind a component; params: static route parameters"
+          },
+          "description": {
+            "type": "string"
+          },
+          "sideEffects": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

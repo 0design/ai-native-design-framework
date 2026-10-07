@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aindf.oleg.design/schemas/0.2/receipt.schema.json",
+  "title": "AINDF build receipt",
+  "description": "Written by the trusted builder. Binds the admitted screen bytes, the DS bundle and the generated output. Not a signature and not acceptance.",
+  "type": "object",
+  "required": ["kind", "screen", "ds", "output", "builder", "state"],
+  "additionalProperties": false,
+  "properties": {
+    "kind": { "const": "aindf.receipt" },
+    "screen": { "type": "object", "required": ["path", "sha256", "route"], "additionalProperties": false, "properties": { "path": { "type": "string" }, "sha256": { "type": "string" }, "route": { "type": "string" } } },
+    "ds": { "type": "object", "required": ["id", "version", "bundleSha256"], "additionalProperties": false, "properties": { "id": { "type": "string" }, "version": { "type": "string" }, "bundleSha256": { "type": "string" } } },
+    "output": { "type": "object", "required": ["path", "sha256"], "additionalProperties": false, "properties": { "path": { "type": "string" }, "sha256": { "type": "string" } } },
+    "builder": { "type": "object", "required": ["kit", "node"], "additionalProperties": false, "properties": { "kit": { "type": "string" }, "node": { "type": "string" } } },
+    "state": { "const": "built", "description": "verified/accepted/released are never written by the builder" }
+  }
+}
