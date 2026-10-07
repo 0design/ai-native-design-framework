@@ -13,7 +13,7 @@ provider depends on the account's settings, not on this code.
 
 Run the checks with `node --test remote-demo/*.test.mjs`.
 
-## Deploying (owner only)
+## Deploying (maintainers only)
 
 Deploying is manual: the `demo-mcp deploy` workflow, from `main`. Its job runs in the GitHub Environment `demo-mcp`,
 so the secrets are available only there.
@@ -21,11 +21,11 @@ so the secrets are available only there.
 > **Set the Environment up before the first run.** If the workflow runs while `demo-mcp` does not exist, GitHub
 > creates the Environment itself, without any branch policy or reviewer.
 
-One-time setup by the repository owner:
+One-time setup by a repository admin:
 
 1. Settings → Environments → **New environment** `demo-mcp`.
 2. **Deployment branches and tags**: selected branches, only `main`.
-3. **Required reviewers**: the owner, so every deploy waits for an approval. Leave **Allow administrators to bypass
+3. **Required reviewers**: a maintainer, so every deploy waits for an approval. Leave **Allow administrators to bypass
    configured protection rules** off, otherwise an admin run skips the approval.
 4. **Environment secrets**: `CLOUDFLARE_API_TOKEN` — a token with only **Account → Workers Scripts → Edit**, for one
    account; `CLOUDFLARE_ACCOUNT_ID` — that account's ID. Do not add them as repository secrets.
