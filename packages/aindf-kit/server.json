@@ -9,12 +9,12 @@
     "subfolder": "packages/aindf-kit"
   },
   "websiteUrl": "https://github.com/0design/ai-native-design-framework",
-  "version": "0.2.0-pilot.7",
+  "version": "0.2.0",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "@ai-native-design-framework/kit",
-      "version": "0.2.0-pilot.7",
+      "version": "0.2.0",
       "transport": {
         "type": "stdio"
       },

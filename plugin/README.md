@@ -1,7 +1,7 @@
 # AINDF plugin
 
-> **Pilot, not released.** This plugin is part of AINDF v2, which is not released yet. It is not listed in any
-> marketplace and its contents may change.
+> Not listed in any marketplace yet. To try it, clone this repository and start Claude Code with
+> `claude --plugin-dir plugin`.
 
 The plugin gives your agent two things:
 

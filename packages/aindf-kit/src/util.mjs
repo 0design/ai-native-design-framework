@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-export const KIT_VERSION = '0.2.0-pilot.7';
+export const KIT_VERSION = '0.2.0';
 export class AindfError extends Error {
   constructor(code, message, path = '$') { super(`${code} ${path}: ${message}`); this.name = 'AindfError'; this.code = code; this.path = path; this.reason = message; }
 }
