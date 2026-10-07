@@ -1,4 +1,4 @@
-// Review 9ec1da11 (Worker boundary FAIL): the byte limit must hold for the bytes actually received, not the header.
+// The byte limit must hold for the bytes actually received, not the header.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';

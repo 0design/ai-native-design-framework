@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aindf.oleg.design/schemas/taxonomy.schema.json",
+  "title": "AINDF Taxonomy",
+  "description": "Every component classified on three orthogonal axes. layer and renderTarget are fixed by AINDF; the role vocabulary is declared by the system.",
+  "type": "object",
+  "required": ["aindfVersion", "roles", "components"],
+  "additionalProperties": false,
+  "properties": {
+    "aindfVersion": { "type": "string" },
+    "layers": {
+      "type": "array",
+      "items": { "enum": ["atoms", "elements", "blocks", "sections"] },
+      "default": ["atoms", "elements", "blocks", "sections"]
+    },
+    "renderTargets": {
+      "type": "array",
+      "items": { "enum": ["inline", "overlay"] },
+      "default": ["inline", "overlay"]
+    },
+    "roles": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "role vocabulary declared by the system (AINDF recommends: display, interactive, form, feedback, layout)"
+    },
+    "components": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/component" }
+    }
+  },
+  "$defs": {
+    "component": {
+      "type": "object",
+      "required": ["name", "layer", "role", "renderTargets", "hasSlots"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "layer": { "enum": ["atoms", "elements", "blocks", "sections"] },
+        "role": { "type": "string" },
+        "renderTargets": {
+          "type": "array",
+          "items": { "enum": ["inline", "overlay"] },
+          "minItems": 1
+        },
+        "hasSlots": { "type": "boolean" },
+        "interaction": { "type": "array", "items": { "enum": ["static", "link", "button", "input"] }, "description": "allowed interaction values; gates interaction-only modifiers via applicability.when" },
+        "semantics": { "type": "string", "description": "semantic HTML element / ARIA role, e.g. <button>, <a>, role=alert" },
+        "variations": { "type": "array", "items": { "type": "string" }, "description": "visual variants, e.g. Primary/Secondary/Ghost" },
+        "sizes": { "type": "array", "items": { "type": "string" }, "description": "size scale; 'Regular' is the unmarked default (not 'Medium'); Small/Large are the qualified options" },
+        "states": { "type": "array", "items": { "type": "string" }, "description": "e.g. Normal/Hover/Focus/Disabled; Form-button adds Loading/Success/Error" },
+        "tag": { "type": "string", "description": "semantic HTML tag, e.g. button" },
+        "status": { "enum": ["stable", "beta", "experimental", "deprecated"] }
+      }
+    }
+  }
+}

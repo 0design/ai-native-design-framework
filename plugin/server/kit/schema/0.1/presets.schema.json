@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aindf.oleg.design/schemas/presets.schema.json",
+  "title": "AINDF Presets",
+  "description": "Pre-composed, ready-to-use instances of a block or section with slots already filled. A preset references existing components and introduces no new component identity.",
+  "type": "object",
+  "required": ["aindfVersion", "presets"],
+  "additionalProperties": false,
+  "properties": {
+    "aindfVersion": { "type": "string" },
+    "presets": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/preset" }
+    }
+  },
+  "$defs": {
+    "preset": {
+      "type": "object",
+      "required": ["name", "builtOn", "slots"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "description": "e.g. pricing-section" },
+        "builtOn": { "type": "string", "description": "component this preset instantiates" },
+        "description": { "type": "string" },
+        "slots": {
+          "type": "object",
+          "description": "map of slot name -> ordered fill entries",
+          "additionalProperties": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/fill" }
+          }
+        }
+      }
+    },
+    "fill": {
+      "type": "object",
+      "required": ["component"],
+      "additionalProperties": false,
+      "properties": {
+        "component": { "type": "string" },
+        "props": { "type": "object", "additionalProperties": true },
+        "text": { "type": "string", "description": "default text content, if any" }
+      }
+    }
+  }
+}
