@@ -3,6 +3,12 @@
   "name": "design.oleg/aindf",
   "title": "AINDF",
   "description": "Read-only MCP server for one AINDF design-system bundle: look up what it offers, validate screens.",
+  "repository": {
+    "url": "https://github.com/0design/ai-native-design-framework",
+    "source": "github",
+    "subfolder": "packages/aindf-kit"
+  },
+  "websiteUrl": "https://github.com/0design/ai-native-design-framework",
   "version": "0.2.0-pilot.6",
   "packages": [
     {

@@ -17,13 +17,14 @@ endpoint with staging (e.g. a hosted DS-MCP), need an author token and only stag
 endpoint such as `aindf mcp` lists 7 tools, and an agent reports the need or the validated ScreenSpec to the user.
 Every tool carries a `title` and MCP hints (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`).
 
-The kit contains no design system (test: no QFactory strings in `src/`; `test/fixtures/tiny-ds` is a second DS).
+The kit contains no design system; its tests run against a small fixture design system kept in the repository.
 Limits: a builder receipt is not a signature; verified/accepted/released are never written by the kit; isolation of
 the author principal comes from deployment rights, not from this package.
 
-Clean install: `node scripts/clean-install.mjs` packs this package, installs the tarball into an empty project and uses
-it only as a consumer would — the `aindf` bin (check, bundle, build, `--check`), the package exports and the MCP over
-stdio — each step with a negative. CI runs it on Node 20 and 22 and prints the tarball sha256 and kit version it checked.
+Clean install: the repository's `packages/aindf-kit/scripts/clean-install.mjs` ([source](https://github.com/0design/ai-native-design-framework/tree/main/packages/aindf-kit))
+packs this package, installs the tarball into an empty project and uses it only as a consumer would — the `aindf` bin
+(check, bundle, build, `--check`), the package exports and the MCP over stdio — each step with a negative. CI runs it on
+Node 20 and 22 and prints the tarball sha256 and kit version it checked.
 
 ## Instance on Core (`ds.core` + `ds.coreBundle` + `ds.coreBundleSha256`, 0.2.0-pilot.6)
 

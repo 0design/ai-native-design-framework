@@ -58,7 +58,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: |
-          url=$(node -p "require('./packages/aindf-kit/server.json')['\$schema']")
-          curl -sfL "$url" -o /tmp/server.schema.json
+      - env:
+          SCHEMA_URL: https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json # pinned; package.test checks server.json names it
+        run: |
+          curl -sfL "$SCHEMA_URL" -o /tmp/server.schema.json
           npx --yes -p ajv-cli@5 -p ajv-formats@2 ajv validate --spec=draft7 --strict=false -c ajv-formats -s /tmp/server.schema.json -d packages/aindf-kit/server.json
