@@ -34,7 +34,7 @@ test('[AINDF-DS-30] negatives: a dropped prop, another type, required-ness chang
     ['dropped enum value', cs => { cs.components.find(c => c.name === 'Hero').props.tone.values = ['calm']; }, 'CORE_CONFORMANCE components.Hero.props.tone'],
     ['dropped slot prop', cs => { delete cs.components.find(c => c.name === 'Page').slotProps.banner; }, 'CORE_CONFORMANCE components.Page.slotProps.banner'],
     ['new required prop', cs => { cs.components.find(c => c.name === 'Heading').props.level = { type: 'enum', values: ['1', '2'], required: true }; }, 'CORE_CONFORMANCE components.Heading.props.level'],
-    // review of #2 (G2/G3): narrowing a binding allowlist or a limit drops values a Core screen may set
+    // narrowing a binding allowlist or a limit drops values a Core screen may set
     ['binding allowlist narrowed', cs => { cs.components.find(c => c.name === 'Cta').props.action.bindings = ['other']; }, 'CORE_CONFORMANCE components.Cta.props.action'],
     ['maxLength tighter', cs => { cs.components.find(c => c.name === 'Heading').props.text.maxLength = 5; }, 'CORE_CONFORMANCE components.Heading.props.text'],
     ['maxLength added where Core has the default', cs => { cs.components.find(c => c.name === 'Cta').props.label.maxLength = 10; }, 'CORE_CONFORMANCE components.Cta.props.label'],
@@ -80,7 +80,7 @@ test('[AINDF-DS-30] limits and lists: tighter item counts, number range, a dropp
   ]) { const p = structuredClone(ok); mutate(p); assert.equal(coreConformance(instanceConfig, inst(p), coreLike).length, 1, why); }
 });
 
-test('[AINDF-DS-29] review of #2 (G1): a Core bundle with the same id@version but other contracts, resealed, is refused on load; coreBundle without its hash is a config error', () => {
+test('[AINDF-DS-29] a Core bundle with the same id@version but other contracts, resealed, is refused on load; coreBundle without its hash is a config error', () => {
   const dir = mkdtempSync(join(tmpdir(), 'aindf-core-pin-'));
   try {
     cpSync(tiny, dir, { recursive: true });
@@ -101,7 +101,7 @@ test('the kit reports its package version (receipts and the MCP)', async () => {
   assert.equal(KIT_VERSION, pkg.version);
 });
 
-// review of #2 (G4): the role's place in a screen — each negative is one a Core screen would hit on admission
+// the role's place in a screen — each negative is one a Core screen would hit on admission
 // (NOT_A_TEMPLATE, ROUTE_PARAMS_UNAVAILABLE, LAYER_MISMATCH, UNKNOWN_SLOT, SLOT_CARDINALITY) while checkDs stayed silent
 const placement = () => ({ components: structuredClone(core.sources.components), taxonomy: structuredClone(core.sources.taxonomy), slots: structuredClone(core.sources.slots), bindings: structuredClone(core.sources.bindings) });
 const placementCodes = ({ components, taxonomy, slots, bindings }) => coreConformance(instanceConfig, components, core, { taxonomy, slots, bindings }).map(e => `${e.code} ${e.path}`);
@@ -148,7 +148,7 @@ test('[AINDF-DS-30] end to end: checkDs passes the Instance components, taxonomy
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
-// review of #3 (G5/G6/G7): each negative is one a Core screen would hit on admission (SLOT_CARDINALITY, UNKNOWN_COMPONENT,
+// each negative is one a Core screen would hit on admission (SLOT_CARDINALITY, UNKNOWN_COMPONENT,
 // UNKNOWN_BINDING) while checkDs stayed silent
 test('[AINDF-DS-30] new slots: an optional new slot conforms; a required one fails', () => {
   const p = placement();
@@ -171,7 +171,7 @@ test('[AINDF-DS-30] Core components and bindings: an added component or binding 
   for (const [why, mutate, want] of cases) { const q = placement(); mutate(q); assert.deepEqual(placementCodes(q), want, why); }
 });
 
-// review of #4 (G8): admission reads a binding's kind only for $.params (params) and $.meta (data)
+// admission reads a binding's kind only for $.params (params) and $.meta (data)
 test('[AINDF-DS-30] binding kinds: a params or data binding keeps its kind; an action binding (named by props) may change it', () => {
   const kinded = { ...core, sources: { ...core.sources, bindings: { aindfVersion: '0.2', bindings: [
     { name: 'signup', kind: 'action', description: 'open signup' }, { name: 'slug', kind: 'params', description: 'route' }, { name: 'page', kind: 'data', description: 'meta' }] } } };

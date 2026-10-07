@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aindf.oleg.design/schemas/patterns.schema.json",
+  "title": "AINDF Patterns",
+  "description": "Parametrized composition recipes. A pattern composes existing components into a section/block/composite and exposes clarifying parameters an agent asks before assembly. A preset is a pattern with all parameters bound. Every referenced component must exist in the taxonomy; compose is valid by construction against slots + applicability.",
+  "type": "object",
+  "required": ["aindfVersion", "patterns"],
+  "additionalProperties": false,
+  "properties": {
+    "aindfVersion": { "type": "string" },
+    "patterns": { "type": "array", "items": { "$ref": "#/$defs/pattern" } }
+  },
+  "$defs": {
+    "pattern": {
+      "type": "object",
+      "required": ["id", "intent", "produces", "compose"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "intent": { "type": "string", "description": "human goal, e.g. 'Newsletter subscribe section'" },
+        "match": { "type": "array", "items": { "type": "string" }, "description": "trigger phrases for intent matching" },
+        "produces": { "enum": ["section", "block", "composite"] },
+        "compose": { "$ref": "#/$defs/node" },
+        "parameters": { "type": "array", "items": { "$ref": "#/$defs/param" } },
+        "modifiers": { "type": "object", "additionalProperties": { "type": "string" }, "description": "category -> value or {param:key}" },
+        "content": { "type": "object", "additionalProperties": { "type": "string" }, "description": "copy placeholders the agent fills" },
+        "gaps": { "type": "array", "items": { "type": "string" }, "description": "components referenced but not yet in the taxonomy" }
+      }
+    },
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "base": { "type": "string", "description": "component this composition is built on" },
+        "component": { "type": "string" },
+        "preset": { "type": "string" },
+        "as": { "type": "string", "description": "semantic slot label, e.g. offer-heading" },
+        "interaction": { "type": "string", "description": "literal (static|link|button|input) or {param:key}" },
+        "props": { "type": "object", "additionalProperties": true },
+        "slots": { "type": "object", "additionalProperties": { "type": "array", "items": { "$ref": "#/$defs/node" } } },
+        "children": { "type": "array", "items": { "$ref": "#/$defs/node" } },
+        "with": { "type": "array", "items": { "$ref": "#/$defs/node" } },
+        "repeat": { "type": "string", "description": "e.g. per-message, per-feature, per-day" },
+        "cols": { "type": "string" },
+        "fixed": { "type": "boolean" },
+        "position": { "type": "string" },
+        "role": { "type": "string" },
+        "prominent": { "type": "boolean" },
+        "labels": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "param": {
+      "type": "object",
+      "required": ["key", "ask"],
+      "additionalProperties": false,
+      "properties": {
+        "key": { "type": "string" },
+        "ask": { "type": "string", "description": "clarifying question (becomes elicitation)" },
+        "options": { "type": "array", "items": { "type": "string" } },
+        "default": {}
+      }
+    }
+  }
+}

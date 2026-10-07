@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aindf.oleg.design/schemas/tokens.schema.json",
+  "title": "AINDF Tokens",
+  "description": "Design tokens across three tiers with applicability (scopes). Tier and the downward-reference rule are fixed by AINDF; values are system-specific.",
+  "type": "object",
+  "required": ["aindfVersion", "tokens"],
+  "additionalProperties": false,
+  "properties": {
+    "aindfVersion": { "type": "string" },
+    "tiers": {
+      "type": "array",
+      "items": { "enum": ["foundations", "semantic", "component"] },
+      "default": ["foundations", "semantic", "component"]
+    },
+    "tokens": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/token" }
+    }
+  },
+  "$defs": {
+    "token": {
+      "type": "object",
+      "required": ["name", "tier"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "description": "slash-path, e.g. color/accent" },
+        "tier": { "enum": ["foundations", "semantic", "component"] },
+        "value": { "description": "raw value; foundations tier only" },
+        "alias": { "type": "string", "description": "name of another token; semantic/component tiers reference downward" },
+        "scopes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "properties this token may bind to (applicability)"
+        }
+      },
+      "oneOf": [
+        { "required": ["value"] },
+        { "required": ["alias"] }
+      ]
+    }
+  }
+}
