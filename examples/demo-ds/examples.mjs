@@ -4,21 +4,32 @@
 // from these sources (`--write` rebuilds it). Exits 1 on any mismatch and names the example that failed.
 import { spawn } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
 import assert from 'node:assert/strict';
 import { loadDs, createBundle } from '../../packages/aindf-kit/src/index.mjs';
-import { canonicalJson } from '../../packages/aindf-kit/src/util.mjs';
+import { canonicalJson, sha256 } from '../../packages/aindf-kit/src/util.mjs';
 
-const here = new URL('.', import.meta.url).pathname;
-const cli = new URL('../../packages/aindf-kit/src/cli.mjs', import.meta.url).pathname;
-const bundlePath = `${here}aindf-demo.bundle.json`;
-const built = createBundle(loadDs(`${here}aindf.config.json`));
+// fileURLToPath, not URL.pathname: a path with a space ("Application Support") would come out as %20
+const here = fileURLToPath(new URL('.', import.meta.url));
+const cli = fileURLToPath(new URL('../../packages/aindf-kit/src/cli.mjs', import.meta.url));
+const bundlePath = join(here, 'aindf-demo.bundle.json');
+const built = createBundle(loadDs(join(here, 'aindf.config.json')));
+// first path where two JSON values differ, for a short failure message
+const firstDiff = (a, b, path = '$') => {
+  if (JSON.stringify(a) === JSON.stringify(b)) return null;
+  if (a && b && typeof a === 'object' && typeof b === 'object' && Array.isArray(a) === Array.isArray(b)) {
+    for (const k of [...new Set([...Object.keys(a), ...Object.keys(b)])].sort()) { const d = firstDiff(a[k], b[k], Array.isArray(a) ? `${path}[${k}]` : `${path}.${k}`); if (d) return d; }
+  }
+  return path;
+};
 if (process.argv.includes('--write')) { writeFileSync(bundlePath, JSON.stringify(built, null, 2) + '\n'); console.log(`wrote ${built.bundleSha256}`); process.exit(0); }
 
 let current = 'bundle';
 try {
   const committed = JSON.parse(readFileSync(bundlePath, 'utf8'));
   // the whole document, not only its hash field: a hand-edited bundle with the old hash must fail here too
-  assert.equal(canonicalJson(committed), canonicalJson(built), 'the committed bundle is not what these sources build: run `node examples/demo-ds/examples.mjs --write`');
+  if (canonicalJson(committed) !== canonicalJson(built)) throw new Error(`the committed bundle (content sha256 ${sha256(committed)}) is not what these sources build (${sha256(built)}); first difference at ${firstDiff(committed, built)}. Run \`node examples/demo-ds/examples.mjs --write\``);
 
   // one stdio session per example, as a fresh agent would open it
   const session = requests => new Promise((resolve, reject) => {

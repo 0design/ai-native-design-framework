@@ -256,7 +256,7 @@
         {
           "name": "Hero",
           "export": "Hero",
-          "description": "Opening section with one heading and up to two buttons.",
+          "description": "Opening section with one heading and optional buttons.",
           "props": {
             "tone": {
               "type": "enum",
@@ -444,5 +444,5 @@
       ]
     }
   },
-  "bundleSha256": "05f01e8605b95250f9371aaff5eb6bab46445a04fde2c87ab73bedcb647721e2"
+  "bundleSha256": "5d99ff815ead205a4f78870f4fa3ff5803fae858a5e1015df0e140219efd538a"
 }
