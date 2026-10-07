@@ -17,7 +17,8 @@ test('the package stays private until the v2 release (owner decision 07.10)', ()
 test('npm pack ships the runtime, schemas, skill and docs — no tests, scripts or pilot provenance', () => {
   const [packed] = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json'], { cwd: dir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }));
   // the whole archive, file by file: exactly the root files plus everything under src/, schema/ and skill/ in the repo
-  const walk = d => readdirSync(d, { withFileTypes: true }).flatMap(e => e.isDirectory() ? walk(join(d, e.name)) : [join(d, e.name)]);
+  // npm never packs .DS_Store, so a local one must not count either
+  const walk = d => readdirSync(d, { withFileTypes: true }).filter(e => e.name !== '.DS_Store').flatMap(e => e.isDirectory() ? walk(join(d, e.name)) : [join(d, e.name)]);
   const expected = [...['LICENSE', 'README.md', 'RULES.md', 'package.json', 'server.json'], ...['src', 'schema', 'skill'].flatMap(d => walk(join(dir, d)).map(f => relative(dir, f)))].sort();
   assert.deepEqual(packed.files.map(f => f.path).sort(), expected);
   assert.ok(expected.includes('src/cli.mjs'), 'the bin is shipped');
@@ -30,7 +31,10 @@ test('LICENSE in the package is the repository LICENSE', () => {
 test('MCP Registry: server.json names this package, its version and mcpName; the run is `aindf mcp <bundle>` over stdio', () => {
   assert.equal(server.name, pkg.mcpName);
   assert.equal(server.name, 'design.oleg/aindf');
-  assert.equal(server.$schema, 'https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json', 'the schema version CI validates against');
+  const ci = readFileSync(`${dir}../../.github/workflows/kit.yml`, 'utf8');
+  const pinned = /SCHEMA_URL: (\S+)/.exec(ci)?.[1];
+  assert.ok(pinned, 'kit.yml pins SCHEMA_URL');
+  assert.equal(server.$schema, pinned, 'server.json names the schema CI validates against');
   assert.deepEqual(server.repository, { url: 'https://github.com/0design/ai-native-design-framework', source: 'github', subfolder: 'packages/aindf-kit' });
   assert.equal(server.version, pkg.version);
   const [p] = server.packages;
