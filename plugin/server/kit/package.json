@@ -5,7 +5,45 @@
   "description": "AINDF v2 kit: conformance check, immutable DS bundle, ScreenSpec admission, Next.js codegen and a DS MCP server for any design system.",
   "type": "module",
   "license": "MIT",
-  "bin": { "aindf": "./src/cli.mjs" },
-  "exports": { ".": "./src/index.mjs", "./mcp": "./src/mcp.mjs", "./schema/*": "./schema/*" },
-  "engines": { "node": ">=20.10" }
+  "author": "Oleg.Design (https://oleg.design)",
+  "homepage": "https://github.com/0design/ai-native-design-framework#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/0design/ai-native-design-framework.git",
+    "directory": "packages/aindf-kit"
+  },
+  "bugs": "https://github.com/0design/ai-native-design-framework/issues",
+  "keywords": [
+    "aindf",
+    "design-system",
+    "mcp",
+    "mcp-server",
+    "screenspec",
+    "validation"
+  ],
+  "mcpName": "design.oleg/aindf",
+  "bin": {
+    "aindf": "./src/cli.mjs"
+  },
+  "exports": {
+    ".": "./src/index.mjs",
+    "./mcp": "./src/mcp.mjs",
+    "./schema/*": "./schema/*"
+  },
+  "engines": {
+    "node": ">=20.10"
+  },
+  "files": [
+    "src",
+    "schema",
+    "skill",
+    "README.md",
+    "RULES.md",
+    "LICENSE",
+    "server.json"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
 }

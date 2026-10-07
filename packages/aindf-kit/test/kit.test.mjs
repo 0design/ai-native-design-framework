@@ -219,8 +219,7 @@ test('MCP texts follow the mode: a read-only server never points to the staging 
   assert.match(await missing(staged), /request-extension/);
 });
 
-test('aindf mcp over stdio: a malformed line answers -32700 with id null, and the next request is answered with its id', async () => {
-  // -32603 (a handler that throws) cannot be reached through JSON input: no request makes the handler throw
+test('aindf mcp over stdio: a malformed line answers -32700 (id null), a failing call -32603 (its id), and the server goes on', async () => {
   const { spawn } = await import('node:child_process');
   const { mkdtempSync, writeFileSync } = await import('node:fs');
   const { tmpdir } = await import('node:os');
@@ -230,10 +229,13 @@ test('aindf mcp over stdio: a malformed line answers -32700 with id null, and th
   const out = await new Promise(resolve => {
     const child = spawn(process.execPath, [cli, 'mcp', join(dir, 'b.json')]);
     let o = ''; child.stdout.on('data', d => { o += d; }); child.on('close', () => resolve(o.trim().split('\n').map(l => JSON.parse(l))));
-    child.stdin.end('{not json\n' + JSON.stringify({ jsonrpc: '2.0', id: 8, method: 'tools/call', params: { name: 'get-ds', arguments: {} } }) + '\n');
+    // a component name that is an object makes the handler throw: -32603 with the request id, and the server goes on
+    const thrower = { jsonrpc: '2.0', id: 7, method: 'tools/call', params: { name: 'get-component', arguments: { name: { toString: 1 } } } };
+    child.stdin.end('{not json\n' + JSON.stringify(thrower) + '\n' + JSON.stringify({ jsonrpc: '2.0', id: 8, method: 'tools/call', params: { name: 'get-ds', arguments: {} } }) + '\n');
   });
   assert.deepEqual(out[0], { jsonrpc: '2.0', id: null, error: { code: -32700, message: 'Parse error' } });
-  assert.equal(out[1].id, 8); assert.ok(out[1].result, 'the server keeps working after a bad line');
+  assert.deepEqual(out[1], { jsonrpc: '2.0', id: 7, error: { code: -32603, message: 'Internal error' } });
+  assert.equal(out[2].id, 8); assert.ok(out[2].result, 'the server keeps working after a bad line and a failing call');
 });
 
 test('validate-screen refusals follow the mode: a read-only server points an unknown component to the user', async () => {

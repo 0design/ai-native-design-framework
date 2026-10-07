@@ -47,6 +47,22 @@ jobs:
         with:
           node-version: 22
       - run: node examples/demo-ds/examples.mjs
+  registry-manifest:
+    # server.json against the official MCP Registry schema (the version its $schema names)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - env:
+          SCHEMA_URL: https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json # pinned; package.test checks server.json names it
+        run: |
+          curl -sfL "$SCHEMA_URL" -o /tmp/server.schema.json
+          npx --yes -p ajv-cli@5 -p ajv-formats@2 ajv validate --spec=draft7 --strict=false -c ajv-formats -s /tmp/server.schema.json -d packages/aindf-kit/server.json
   plugin:
     # the plugin as Claude Code starts it: copies, manifest, MCP entry, server; then the official validator
     runs-on: ubuntu-latest
