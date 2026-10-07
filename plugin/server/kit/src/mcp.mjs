@@ -51,7 +51,8 @@ export function createDsMcp(bundle, { staging = null, serverName = `aindf-ds-${b
       case 'slot-accepts': { const c = component(args.component); if (!c) return toolError('UNKNOWN_COMPONENT', String(args.component)); return text(args.slot ? c.slots.find(x => x.name === args.slot) ?? null : c.slots); }
       case 'applicable-modifiers': { const c = classified.get(args.component); if (!c) return toolError('UNKNOWN_COMPONENT', String(args.component)); return text((s.applicability.modifiers ?? []).filter(m => (m.appliesTo.components ?? []).includes(c.name) || (m.appliesTo.layers ?? []).includes(c.layer) || (m.appliesTo.roles ?? []).includes(c.role))); }
       case 'get-preset': return text(args.name ? s.presets.presets.find(p => p.name === args.name) ?? null : s.presets.presets.map(p => p.name));
-      case 'validate-screen': return text(admitScreen(bundle, args.screen));
+      // a read-only server has no request-extension, so its refusals point to the user instead
+      case 'validate-screen': return text(admitScreen(bundle, args.screen, staging ? {} : { missing: 'report the need to the user' }));
       case 'submit-screen': case 'request-extension': {
         if (!staging) return toolError('READ_ONLY', 'this MCP endpoint has no staging');
         const principal = await staging.authorize(auth);
@@ -99,7 +100,7 @@ export const DRAIN_CAP_BYTES = 8 * 1024 * 1024;
 async function drain(reader) { if (!reader) return; let seen = 0; try { for (;;) { const { done, value } = await reader.read(); if (done) return; seen += value.byteLength; if (seen > DRAIN_CAP_BYTES) { await reader.cancel('body too large'); return; } } } catch {} }
 const tooLarge = maxBytes => Response.json({ jsonrpc: '2.0', id: null, error: { code: -32600, message: `Request body exceeds ${maxBytes} bytes` } }, { status: 413, headers: { 'cache-control': 'no-store' } });
 /**
- * Reads at most maxBytes of the actual body stream (review 9ec1da11: a header check alone let a 300 KB body without
+ * Reads at most maxBytes of the actual body stream (a header check alone let a 300 KB body without
  * or with a false Content-Length through). Returns null when the body is larger; at most maxBytes are buffered and the
  * rest is discarded up to DRAIN_CAP_BYTES.
  */

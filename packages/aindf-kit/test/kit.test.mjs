@@ -110,7 +110,7 @@ test('MCP serves the AINDF query surface, validates, and stages only with an aut
   assert.throws(() => createDsMcp({ ...bundle, ds: { ...bundle.ds, version: '9.9.9' } }), /BUNDLE_INTEGRITY/);
 });
 
-test('review 0d3e7edd: prototype keys cannot pass as declared props or fields', () => {
+test('prototype keys cannot pass as declared props or fields', () => {
   for (const key of ['constructor', 'toString', 'hasOwnProperty', '__proto__', 'valueOf']) {
     const s = JSON.parse(JSON.stringify(screen()).replace('"tone":"bold"', `"tone":"bold","${key}":"x"`));
     assert.ok(codes(s).includes('UNKNOWN_PROP'), `prop ${key}: ${codes(s)}`);
@@ -121,7 +121,7 @@ test('review 0d3e7edd: prototype keys cannot pass as declared props or fields', 
   }
 });
 
-test('review 0d3e7edd: template slots are rendered, not dropped', () => {
+test('template slots are rendered, not dropped', () => {
   const s = mutate(x => { x.template.slots = { banner: [{ component: 'Heading', props: { text: 'Banner' } }] }; });
   assert.equal(admitScreen(bundle, s).ok, true);
   const code = generateNextPage(bundle, s, { screenPath: 's', screenBytes: Buffer.from('x') });
@@ -217,4 +217,28 @@ test('MCP texts follow the mode: a read-only server never points to the staging 
   assert.doesNotMatch(await missing(readOnly), /request-extension/);
   assert.match(await init(staged), /request-extension/);
   assert.match(await missing(staged), /request-extension/);
+});
+
+test('aindf mcp over stdio: a malformed line answers -32700 with id null, and the next request is answered with its id', async () => {
+  // -32603 (a handler that throws) cannot be reached through JSON input: no request makes the handler throw
+  const { spawn } = await import('node:child_process');
+  const { mkdtempSync, writeFileSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const dir = mkdtempSync(join(tmpdir(), 'aindf-rpc-'));
+  writeFileSync(join(dir, 'b.json'), JSON.stringify(bundle));
+  const cli = fileURLToPath(new URL('../src/cli.mjs', import.meta.url));
+  const out = await new Promise(resolve => {
+    const child = spawn(process.execPath, [cli, 'mcp', join(dir, 'b.json')]);
+    let o = ''; child.stdout.on('data', d => { o += d; }); child.on('close', () => resolve(o.trim().split('\n').map(l => JSON.parse(l))));
+    child.stdin.end('{not json\n' + JSON.stringify({ jsonrpc: '2.0', id: 8, method: 'tools/call', params: { name: 'get-ds', arguments: {} } }) + '\n');
+  });
+  assert.deepEqual(out[0], { jsonrpc: '2.0', id: null, error: { code: -32700, message: 'Parse error' } });
+  assert.equal(out[1].id, 8); assert.ok(out[1].result, 'the server keeps working after a bad line');
+});
+
+test('validate-screen refusals follow the mode: a read-only server points an unknown component to the user', async () => {
+  const s = mutate(x => { x.sections[0].component = 'Nope'; });
+  const msg = async h => (await h({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'validate-screen', arguments: { screen: s } } })).result.structuredContent.errors.find(e => e.code === 'UNKNOWN_COMPONENT').message;
+  assert.match(await msg(createDsMcp(bundle)), /report the need to the user$/);
+  assert.match(await msg(createDsMcp(bundle, { staging: { authorize: () => 'a', put: async () => ({ created: true }) } })), /request an extension instead$/);
 });

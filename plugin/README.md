@@ -31,7 +31,7 @@ Your agent sees the server's answers like any other tool output.
 
 ## Requirements
 
-Node.js 20 or newer. Nothing to install: the plugin has no dependencies.
+Node.js 20.10 or newer. Nothing to install: the plugin has no dependencies.
 
 ## For maintainers
 

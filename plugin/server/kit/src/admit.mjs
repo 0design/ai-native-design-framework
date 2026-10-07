@@ -52,7 +52,7 @@ export const missingProps = (c, name, props, path) => Object.entries(c.props).fi
  * Admission of one ScreenSpec against one DS bundle. Pure JSON in, stable-coded errors out.
  * Returns { ok, errors } — errors carry { code, path, message } so an agent can repair without reading source.
  */
-export function admitScreen(bundle, screen) {
+export function admitScreen(bundle, screen, { missing = 'request an extension instead' } = {}) {
   verifyBundle(bundle);
   const errors = [];
   const err = (code, path, message) => errors.push({ code, path, message });
@@ -68,7 +68,7 @@ export function admitScreen(bundle, screen) {
   const slotsets = new Map(sources.slots.slotsets.map(s => [s.component, s]));
   const node = (n, path, expect) => {
     const c = contracts.get(n.component), t = classified.get(n.component);
-    if (!c || !t) return err('UNKNOWN_COMPONENT', `${path}.component`, `${n.component} is not in DS ${ds.id}@${ds.version}; request an extension instead`);
+    if (!c || !t) return err('UNKNOWN_COMPONENT', `${path}.component`, `${n.component} is not in DS ${ds.id}@${ds.version}; ${missing}`);
     if (expect.template && !c.template) err('NOT_A_TEMPLATE', `${path}.component`, `${n.component} is not a template`);
     if (expect.layer && t.layer !== expect.layer) err('LAYER_MISMATCH', `${path}.component`, `${n.component} is ${t.layer}, expected ${expect.layer}`);
     if (expect.accepts) {

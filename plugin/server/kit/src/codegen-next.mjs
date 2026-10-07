@@ -22,7 +22,7 @@ export function generateNextPage(bundle, screen, { screenPath, screenBytes }) {
     const open = `${pad}<${c.export}${attrs ? ' ' + attrs : ''}`;
     return children.length ? `${open}>\n${children.map(x => jsx(x, indent + 2)).join('\n')}\n${pad}</${c.export}>` : `${open}/>`;
   };
-  // The template renders the sections as its children; its own declared slots go to their slot props (0d3e7edd review).
+  // The template renders the sections as its children; its own declared slots go to their slot props.
   const body = jsx({ ...screen.template, slots: { ...(screen.template.slots ?? {}) } }, 4, screen.sections);
   const needsParams = [...screen.sections].some(function walk(n) { return contracts.get(n.component).routeParams || Object.values(n.slots ?? {}).flat().some(walk); });
   const imports = new Set(used);
