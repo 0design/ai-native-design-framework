@@ -46,8 +46,9 @@ access each party has, not by AINDF.
 
 You ask your agent: *"Make the headline violet and bigger."* The demo design system in
 [`examples/demo-ds`](examples/demo-ds) has a `Heading` whose only prop (a setting a screen may set) is `text`. Your
-agent writes this screen config. It names the design-system version it is written for (`ds`, with the hash (a fingerprint of the content) of that
-version's bundle, the one file that holds that version), the page address (`route`), the page frame (`template`) and the sections inside it:
+agent writes this screen config. It names the design-system version it is written for (`ds`), with a hash — a
+fingerprint of that version's bundle, the one file that holds the version. It also names the page address (`route`),
+the page frame (`template`) and the sections inside it:
 
 ```json
 {
