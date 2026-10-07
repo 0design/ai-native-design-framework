@@ -12,6 +12,8 @@ const server = JSON.parse(readFileSync(`${dir}server.json`, 'utf8'));
 
 test('the package stays private until the v2 release (owner decision 07.10)', () => {
   assert.equal(pkg.private, true);
+  // npm organization chosen by the owner 07.10; the MCP Registry name is a separate namespace
+  assert.equal(pkg.name, '@ai-native-design-framework/kit');
 });
 
 test('npm pack ships the runtime, schemas, skill and docs — no tests, scripts or pilot provenance', () => {
@@ -40,6 +42,6 @@ test('MCP Registry: server.json names this package, its version and mcpName; the
   const [p] = server.packages;
   assert.deepEqual([p.registryType, p.identifier, p.version, p.transport.type], ['npm', pkg.name, pkg.version, 'stdio']);
   assert.deepEqual(p.packageArguments.map(a => a.value ?? `<${a.valueHint}>`), ['mcp', '<bundle_path>']);
-  assert.deepEqual(Object.keys(pkg.bin), ['aindf'], 'npx @aindf/kit runs the only bin');
+  assert.deepEqual(Object.keys(pkg.bin), ['aindf'], 'npx @ai-native-design-framework/kit runs the only bin');
   assert.deepEqual(pkg.publishConfig, { access: 'public', provenance: true });
 });
