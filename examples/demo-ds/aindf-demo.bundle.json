@@ -1,0 +1,448 @@
+{
+  "kind": "aindf.ds-bundle",
+  "conformsTo": "aindf@0.2",
+  "ds": {
+    "id": "aindf-demo",
+    "version": "0.1.0"
+  },
+  "implementation": {
+    "framework": "next-app",
+    "module": "@aindf-demo/ds"
+  },
+  "sources": {
+    "tokens": {
+      "aindfVersion": "0.1",
+      "tokens": [
+        {
+          "name": "ink-900",
+          "tier": "foundations",
+          "value": "#111111"
+        },
+        {
+          "name": "paper-0",
+          "tier": "foundations",
+          "value": "#ffffff"
+        },
+        {
+          "name": "green-600",
+          "tier": "foundations",
+          "value": "#1f7a4d"
+        },
+        {
+          "name": "space-4",
+          "tier": "foundations",
+          "value": "16px"
+        },
+        {
+          "name": "color-text",
+          "tier": "semantic",
+          "alias": "ink-900",
+          "scopes": [
+            "color"
+          ]
+        },
+        {
+          "name": "color-surface",
+          "tier": "semantic",
+          "alias": "paper-0",
+          "scopes": [
+            "background"
+          ]
+        },
+        {
+          "name": "color-accent",
+          "tier": "semantic",
+          "alias": "green-600",
+          "scopes": [
+            "color",
+            "background"
+          ]
+        },
+        {
+          "name": "gap-section",
+          "tier": "semantic",
+          "alias": "space-4",
+          "scopes": [
+            "gap"
+          ]
+        },
+        {
+          "name": "button-bg",
+          "tier": "component",
+          "alias": "color-accent"
+        }
+      ]
+    },
+    "taxonomy": {
+      "aindfVersion": "0.1",
+      "roles": [
+        "layout",
+        "display",
+        "interactive",
+        "form"
+      ],
+      "components": [
+        {
+          "name": "Page",
+          "layer": "sections",
+          "role": "layout",
+          "renderTargets": [
+            "inline"
+          ],
+          "hasSlots": false
+        },
+        {
+          "name": "Hero",
+          "layer": "sections",
+          "role": "display",
+          "renderTargets": [
+            "inline"
+          ],
+          "hasSlots": true
+        },
+        {
+          "name": "FeatureList",
+          "layer": "sections",
+          "role": "display",
+          "renderTargets": [
+            "inline"
+          ],
+          "hasSlots": false
+        },
+        {
+          "name": "ContactForm",
+          "layer": "sections",
+          "role": "form",
+          "renderTargets": [
+            "inline"
+          ],
+          "hasSlots": true
+        },
+        {
+          "name": "Heading",
+          "layer": "elements",
+          "role": "display",
+          "renderTargets": [
+            "inline"
+          ],
+          "hasSlots": false
+        },
+        {
+          "name": "Button",
+          "layer": "elements",
+          "role": "interactive",
+          "renderTargets": [
+            "inline"
+          ],
+          "hasSlots": false
+        },
+        {
+          "name": "Field",
+          "layer": "elements",
+          "role": "form",
+          "renderTargets": [
+            "inline"
+          ],
+          "hasSlots": false
+        }
+      ]
+    },
+    "slots": {
+      "aindfVersion": "0.1",
+      "slotsets": [
+        {
+          "component": "Hero",
+          "slots": [
+            {
+              "name": "title",
+              "accepts": {
+                "components": [
+                  "Heading"
+                ]
+              },
+              "cardinality": "1..1"
+            },
+            {
+              "name": "actions",
+              "accepts": {
+                "components": [
+                  "Button"
+                ]
+              },
+              "cardinality": "0..*"
+            }
+          ]
+        },
+        {
+          "component": "ContactForm",
+          "slots": [
+            {
+              "name": "fields",
+              "accepts": {
+                "components": [
+                  "Field"
+                ]
+              },
+              "cardinality": "1..*"
+            }
+          ]
+        }
+      ]
+    },
+    "applicability": {
+      "aindfVersion": "0.1",
+      "modifierCategories": [
+        "emphasis"
+      ],
+      "modifiers": [
+        {
+          "category": "emphasis",
+          "values": [
+            "primary",
+            "quiet"
+          ],
+          "appliesTo": {
+            "components": [
+              "Button"
+            ]
+          }
+        }
+      ]
+    },
+    "presets": {
+      "aindfVersion": "0.1",
+      "presets": [
+        {
+          "name": "hero-with-signup",
+          "builtOn": "Hero",
+          "slots": {
+            "title": [
+              {
+                "component": "Heading",
+                "props": {
+                  "text": "Build screens from your design system"
+                }
+              }
+            ],
+            "actions": [
+              {
+                "component": "Button",
+                "props": {
+                  "label": "Sign up",
+                  "action": "signup"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "components": {
+      "aindfVersion": "0.2",
+      "components": [
+        {
+          "name": "Page",
+          "export": "Page",
+          "template": true,
+          "description": "Page frame; the screen sections render inside it.",
+          "props": {
+            "title": {
+              "type": "text",
+              "required": true,
+              "maxLength": 80
+            }
+          }
+        },
+        {
+          "name": "Hero",
+          "export": "Hero",
+          "description": "Opening section with one heading and up to two buttons.",
+          "props": {
+            "tone": {
+              "type": "enum",
+              "values": [
+                "calm",
+                "bold"
+              ],
+              "default": "calm"
+            }
+          },
+          "slotProps": {
+            "title": "title",
+            "actions": "actions"
+          },
+          "examples": {
+            "good": [
+              {
+                "tone": "bold"
+              }
+            ],
+            "bad": [
+              {
+                "tone": "loud",
+                "$expect": "INVALID_ENUM"
+              }
+            ]
+          }
+        },
+        {
+          "name": "FeatureList",
+          "export": "FeatureList",
+          "description": "A titled list of short benefits.",
+          "props": {
+            "title": {
+              "type": "text",
+              "required": true,
+              "maxLength": 60
+            },
+            "items": {
+              "type": "textList",
+              "minItems": 1,
+              "maxItems": 6,
+              "maxLength": 120,
+              "required": true
+            }
+          },
+          "examples": {
+            "good": [
+              {
+                "title": "Why teams use it",
+                "items": [
+                  "One source of truth",
+                  "Checked before it ships"
+                ]
+              }
+            ],
+            "bad": [
+              {
+                "title": "Why",
+                "items": [],
+                "$expect": "INVALID_TEXT_LIST"
+              }
+            ]
+          }
+        },
+        {
+          "name": "ContactForm",
+          "export": "ContactForm",
+          "description": "A form that sends its fields to the team.",
+          "props": {
+            "submitLabel": {
+              "type": "text",
+              "required": true,
+              "maxLength": 30
+            },
+            "action": {
+              "type": "binding",
+              "bindings": [
+                "sendContact"
+              ],
+              "required": true
+            }
+          },
+          "slotProps": {
+            "fields": "fields"
+          }
+        },
+        {
+          "name": "Heading",
+          "export": "Heading",
+          "props": {
+            "text": {
+              "type": "text",
+              "required": true,
+              "maxLength": 80
+            }
+          },
+          "examples": {
+            "good": [
+              {
+                "text": "Pricing"
+              }
+            ],
+            "bad": [
+              {
+                "text": "Pricing",
+                "color": "violet",
+                "$expect": "UNKNOWN_PROP"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Button",
+          "export": "Button",
+          "props": {
+            "label": {
+              "type": "text",
+              "required": true,
+              "maxLength": 30
+            },
+            "action": {
+              "type": "binding",
+              "bindings": [
+                "signup"
+              ],
+              "required": true
+            }
+          },
+          "examples": {
+            "good": [
+              {
+                "label": "Sign up",
+                "action": "signup"
+              }
+            ],
+            "bad": [
+              {
+                "label": "Sign up",
+                "action": "signup",
+                "className": "bg-violet-500",
+                "$expect": "UNKNOWN_PROP"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Field",
+          "export": "Field",
+          "props": {
+            "label": {
+              "type": "text",
+              "required": true,
+              "maxLength": 40
+            },
+            "kind": {
+              "type": "enum",
+              "values": [
+                "text",
+                "email",
+                "message"
+              ],
+              "required": true
+            }
+          }
+        }
+      ]
+    },
+    "bindings": {
+      "aindfVersion": "0.2",
+      "bindings": [
+        {
+          "name": "signup",
+          "kind": "action",
+          "description": "open the sign-up flow"
+        },
+        {
+          "name": "sendContact",
+          "kind": "action",
+          "description": "send the contact form to the team inbox",
+          "sideEffects": [
+            "sends a message"
+          ]
+        }
+      ]
+    }
+  },
+  "bundleSha256": "05f01e8605b95250f9371aaff5eb6bab46445a04fde2c87ab73bedcb647721e2"
+}
