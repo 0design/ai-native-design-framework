@@ -1,68 +1,63 @@
-# AI-Native Design Framework (AINDF)
+"You’re absolutely right, I ignored your design system and hardcoded UI. Again."<br>— Your AI-Agent
 
-Make generic UI look consistent. No hardcoding, no ignoring your design system.
+<picture>
+  <source media="(prefers-reduced-motion: reduce)" srcset="https://raw.githubusercontent.com/0design/ai-native-design-framework/main/docs/media/before-after.png">
+  <img src="https://raw.githubusercontent.com/0design/ai-native-design-framework/main/docs/media/before-after.gif" width="1200" alt="The same QFactory home page built twice from the same prompt and the same design system. A divider slides between the two. Without AINDF: underline tabs, a plain headline, a plain search field and identical cards. With AINDF: the real QFactory header, the large two-line hero with the violet search composer and the workflow cover tiles.">
+</picture>
 
-AINDF is a spec, not a component library. It describes how to write down your
-design system (tokens, components, slots and the rules between them) as JSON
-files that an AI agent can read and check its work against. You keep your own
-tokens, components and brand.
+# Get started
 
-Website: https://aindf.oleg.design
+> Add AINDF to my design system and to this project. Read the spec at https://github.com/0design/ai-native-design-framework (SPEC.md and schemas/). Describe my design system as the five AINDF contract sources (tokens, taxonomy, slots, applicability, presets) and check each file against its JSON Schema; the AINDF validator, MCP server and builder are not released yet (v2). Then add a rule to the instructions file your agent reads in this repo: build screens only from these contracts at a pinned version, never hardcode a value the design system does not have, and when something is missing, propose an extension to the design system instead of writing your own CSS. If my design system exposes an MCP server, connect it in your agent's MCP settings so you look up components, slots, modifiers and tokens instead of guessing. Do not change the design system itself without my approval.
+
+## How it works
+
+```
+  your prompt
+       │
+       ▼
+  your agent ◀──── MCP ────▶ your design system
+       │            asks what it offers: tokens, components, slots
+       ▼
+  screen config (JSON, pinned to one version of your design system)
+       │
+       ▼
+  check ── refused: "Heading has no prop color" ──▶ your agent asks you
+       │                                            to add it to your
+       │ passes                                     design system
+       ▼
+  builder ──▶ a screen built only from your design system
+```
+
+Without AINDF your agent writes HTML and CSS itself and can ignore your design system. With AINDF it writes a screen
+config, and only what your design system offers passes the check. Change a component once, rebuild, and every screen
+that uses it changes.
 
 ## What's in this repo
 
-- [`SPEC.md`](SPEC.md): the spec itself.
-- [`schemas/`](schemas): JSON Schemas for the files your design system
-  publishes: tokens, taxonomy, slots, applicability, presets and patterns.
-- [`patterns/starter.json`](patterns/starter.json): an example pattern for a
-  newsletter signup section.
+- [`SPEC.md`](SPEC.md): the specification.
+- [`packages/aindf-kit`](packages/aindf-kit): the check, the builder and the MCP server.
+- [`plugin`](plugin): the plugin for Claude Code.
+- [`examples/demo-ds`](examples/demo-ds): a demo design system with three examples you can run.
+- [`schemas`](schemas) and [`patterns`](patterns): JSON Schemas and an example pattern.
 
-The validator, MCP server and builder come in the next release, see
-[Coming in v2](#coming-in-v2). For now you can check your files against the
-schemas.
+## Contribute
 
-## Getting started
+You can improve the spec, the kit or the plugin, or suggest an idea.
 
-1. Read [`SPEC.md`](SPEC.md). Sections 3 to 6 cover component layers, tokens,
-   modifiers, presets and patterns.
-2. Describe your design system in JSON files that follow the schemas.
-3. Check each file with any JSON Schema validator that supports draft 2020-12.
-   With Node installed, this checks the example pattern:
+1. Fork the repository and make a branch.
+2. Make your change and run the checks: `node --test packages/aindf-kit/test/*.test.mjs` and
+   `node examples/demo-ds/examples.mjs`. If you change a schema, update `SPEC.md` and `patterns/starter.json` in the
+   same pull request.
+3. Open a pull request. The checks run automatically.
 
-   ```sh
-   npx ajv-cli@5 validate --spec=draft2020 -s schemas/patterns.schema.json -d patterns/starter.json
-   ```
+Have an idea? [Open an issue](https://github.com/0design/ai-native-design-framework/issues/new) and describe what
+result you want.
 
-   Swap in your own schema and data file.
+## Links
 
-## Coming in v2
-
-The next release adds three tools that work together:
-
-- **MCP server.** Your AI agent looks up what your design system offers
-  (components, slots, variants, tokens) through MCP instead of guessing.
-- **Validator.** Checks a screen config before it is built. It rejects unknown
-  components, slots or modifiers, one-off styles and code inside the config.
-- **Builder.** Builds the screen from that config and a specific version of your
-  design system. The agent edits the config, not HTML, CSS or JSX.
-
-If your design system is missing something, the agent asks for it to be added
-instead of writing its own CSS.
-
-Why it matters: fix something once in the design system and every screen that
-uses it should get the fix.
-
-To hear when v2 is out, watch this repo on GitHub: **Watch → Custom → Releases**.
-
-## Status
-
-Draft 0.1. The spec may still change before 1.0.
-
-## Contributing
-
-Open an issue or a pull request. If you change a schema, update `SPEC.md` and
-`patterns/starter.json` in the same pull request and run the check above.
-
-## License
-
-MIT, see [LICENSE](LICENSE).
+- Specification: [SPEC.md](SPEC.md)
+- Error codes: [RULES.md](packages/aindf-kit/RULES.md)
+- Demo design system: [examples/demo-ds](examples/demo-ds)
+- For AI agents: build screens only through the design system's MCP. The rules are in
+  [the skill](plugin/skills/aindf-screen-author/SKILL.md).
+- License: [MIT](LICENSE)
