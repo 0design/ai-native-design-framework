@@ -2,7 +2,7 @@
 
 <picture>
   <source media="(prefers-reduced-motion: reduce)" srcset="https://raw.githubusercontent.com/0design/ai-native-design-framework/main/docs/media/before-after.png">
-  <img src="https://raw.githubusercontent.com/0design/ai-native-design-framework/main/docs/media/before-after.gif" width="1200" alt="The same QFactory home page built twice from the same prompt and the same design system. A divider slides between the two. Without AINDF: underline tabs, a plain headline, a plain search field and identical cards. With AINDF: the real QFactory header, the large two-line hero with the violet search composer and the workflow cover tiles.">
+  <img src="https://raw.githubusercontent.com/0design/ai-native-design-framework/main/docs/media/before-after.gif" width="1200" alt="The same QFactory home page built twice from the same prompt and the same design system. A divider slides between the two. Without AINDF: underline tabs, a plain headline, a plain search field and identical cards. With AINDF: the large two-line hero with the violet search composer and the workflow cover tiles.">
 </picture>
 
 # Get started
@@ -28,9 +28,9 @@
   builder ──▶ a screen built only from your design system
 ```
 
-Without AINDF your agent writes HTML and CSS itself and can ignore your design system. With AINDF it writes a screen
-config, and only what your design system offers passes the check. Change a component once, rebuild, and every screen
-that uses it changes.
+Without AINDF your agent writes HTML and CSS itself and can ignore your design system. With AINDF the screen is a
+config, and the check passes only what your design system offers. Fix a component in your design system once, and
+every screen built from it gets the fix on the next build.
 
 ## What's in this repo
 
@@ -48,7 +48,7 @@ You can improve the spec, the kit or the plugin, or suggest an idea.
 2. Make your change and run the checks: `node --test packages/aindf-kit/test/*.test.mjs` and
    `node examples/demo-ds/examples.mjs`. If you change a schema, update `SPEC.md` and `patterns/starter.json` in the
    same pull request.
-3. Open a pull request. The checks run automatically.
+3. Open a pull request. Changes to the kit, the plugin and the examples are checked automatically.
 
 Have an idea? [Open an issue](https://github.com/0design/ai-native-design-framework/issues/new) and describe what
 result you want.
