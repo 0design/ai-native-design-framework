@@ -46,7 +46,9 @@ test('the Worker keeps nothing: Cloudflare observability is off in its config', 
   const { readFileSync } = await import('node:fs');
   const config = JSON.parse(readFileSync(new URL('./wrangler.jsonc', import.meta.url), 'utf8').replace(/^\s*\/\/.*$/gm, ''));
   assert.deepEqual(config.observability, { enabled: false });
-  for (const key of ['kv_namespaces', 'r2_buckets', 'd1_databases', 'durable_objects', 'routes', 'route', 'vars', 'logpush', 'tail_consumers']) assert.equal(config[key], undefined, key);
+  // an exact allowlist: any other key (storage, queues, services, analytics, env with its own routes…) fails
+  assert.deepEqual(Object.keys(config).sort(), ['compatibility_date', 'main', 'name', 'observability', 'preview_urls', 'workers_dev']);
+  assert.equal(config.workers_dev, true); assert.equal(config.preview_urls, false);
 });
 
 test('GET /mcp is 405, an oversized body is 413, any other path is 404', async () => {

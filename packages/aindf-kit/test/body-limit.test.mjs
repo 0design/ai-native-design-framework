@@ -46,3 +46,13 @@ test('an honest oversized Content-Length is 413 without parsing', async () => {
   assert.deepEqual(calls, []);
 });
 test('the default limit is 256 KiB and the drain cap 8 MiB', () => { assert.equal(DEFAULT_MAX_BODY_BYTES, 256 * 1024); assert.equal(DRAIN_CAP_BYTES, 8 * 1024 * 1024); });
+
+test('a JSON-RPC batch is refused with -32600 and no-store (MCP 2025-06-18 has no batches)', async () => {
+  calls.length = 0;
+  const one = JSON.parse(list(0));
+  const r = await handler(post(JSON.stringify([one, one])));
+  assert.equal(r.status, 400);
+  assert.equal(r.headers.get('cache-control'), 'no-store');
+  assert.equal((await r.json()).error.code, -32600);
+  assert.deepEqual(calls, [], 'nothing in the batch is handled');
+});
