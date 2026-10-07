@@ -5,20 +5,23 @@ Version 0.2.0 · Draft
 ## What AINDF is
 
 AINDF is a way to write your design system down so that an AI agent builds screens only from it. Your tokens,
-components, slots and the rules between them become one machine-readable model. The agent reads that model, writes a
-screen as a config, and a check refuses anything your design system does not have. You keep your own tokens,
-components and brand.
+components, slots (the places inside a component that hold other components) and the rules between them become one
+machine-readable model. The agent reads that model, writes a screen as a config (a JSON file that lists the
+components and their settings), and a check refuses anything your design system does not have. You keep your own
+tokens, components and brand.
 
 Three parties take part:
 
 | Who | Does |
 |---|---|
 | You, the design-system owner | write the contracts, publish versions of the design system, accept results |
-| Your agent, the screen author | looks up what the design system offers through MCP, writes screen configs, asks for what is missing |
-| The builder | builds pages from screen configs that passed the check, with one pinned version of the design system |
+| Your agent, the screen author | looks up what the design system offers through MCP (the protocol agents use to ask a tool for data), writes screen configs, asks for what is missing |
+| The builder | builds pages from screen configs that passed the check, with the one version of the design system each config names |
 
-A screen config cannot carry HTML, CSS or code: the check refuses it. Who may change the design system, the checks or
-the built pages is set by the access each party has, not by AINDF.
+The check runs when your agent calls `validate-screen` (the design system's MCP tool for it) and again inside every
+build. You or your CI run the build (`aindf build`); it writes the pages into your app. A screen config cannot carry
+HTML, CSS or code: the check refuses it. Who may change the design system, the checks or the built pages is set by the
+access each party has, not by AINDF.
 
 ## How it works
 
@@ -27,12 +30,12 @@ the built pages is set by the access each party has, not by AINDF.
        │
        ▼
   your agent ◀──── MCP ────▶ your design system
-       │            asks what it offers: tokens, components, slots
+       │            asks what it offers: components, slots, modifiers, presets
        ▼
   screen config (JSON, pinned to one version of your design system)
        │
        ▼
-  check ── refused: "Heading has no prop color" ──▶ your agent asks you
+  check ── refused: "Heading has no prop color; …" ──▶ your agent asks you
        │                                            to add it to your
        │ passes                                     design system
        ▼
@@ -42,8 +45,9 @@ the built pages is set by the access each party has, not by AINDF.
 ## An example: one refusal
 
 You ask your agent: *"Make the headline violet and bigger."* The demo design system in
-[`examples/demo-ds`](examples/demo-ds) has a `Heading` whose only prop is `text`. Your agent writes this screen
-config:
+[`examples/demo-ds`](examples/demo-ds) has a `Heading` whose only prop (a setting a screen may set) is `text`. Your
+agent writes this screen config. It names the design-system version it is written for (`ds`, with the hash of that
+version's bundle, the one file that holds that version), the page address (`route`), the page frame (`template`) and the sections inside it:
 
 ```json
 {
@@ -79,9 +83,9 @@ The check answers:
 ```
 
 Your agent does not style the headline by hand. It tells you that the design system has no color or size for
-`Heading`, and you decide whether to add them. To see this answer yourself, install the [plugin](plugin), leave
-its design-system bundle setting empty so it serves the demo, and ask your agent to call `validate-screen` with this
-config.
+`Heading`, and you decide whether to add them. To see this answer yourself, clone this repository, start
+Claude Code with the plugin from the clone (`claude --plugin-dir plugin`), leave its design-system bundle setting empty
+so it serves the demo, and ask your agent to call `validate-screen` with this config.
 
 ## Glossary
 
@@ -92,7 +96,7 @@ config.
 | Component contract | The closed list of props a screen may set on one component, with their types and limits (§7.1). |
 | Slot | A named place inside a component that holds other components (§3.1). |
 | Token tier | `foundations`, `semantic` or `component`; tokens reference downward only (§4). |
-| Modifier | A cross-cutting property, such as `emphasis` in the demo, applied out of band (§5). |
+| Modifier | A setting that can apply to many components, such as `emphasis` in the demo, kept apart from their props (§5). |
 | Prop | One setting of a component that a screen config may set, such as a heading's `text` (§7.1). |
 | MCP | Model Context Protocol: the way an agent asks a tool for data. The design system's MCP server answers what the design system offers and checks screen configs (§9). |
 | Preset | A ready-made component with its slots already filled (§6). |
@@ -100,10 +104,10 @@ config.
 | Screen config (ScreenSpec) | The only file your agent writes: a route, a template and sections built from components (§7.3). |
 | Bundle | One immutable version of the design system, addressed by its content hash (§7.4). |
 | Pin | The design-system id, version and bundle hash a screen config is written for (§7.3). |
-| Screen check (admission) | The step that admits a screen config against one bundle or refuses it with codes (§7.5). |
-| Design-system check (conformance) | The step that checks the design system itself, `aindf check` (§9). |
+| Screen check (admission) | The step that accepts a screen config against one bundle or refuses it with codes (§7.5). Your agent runs it with `validate-screen`. |
+| Design-system check (conformance) | The step that checks the design system itself (§9). For 0.2, `aindf check`. |
 | Screen author | Whoever writes screen configs; usually your agent (§7). |
-| Builder | The trusted step that builds pages from admitted screen configs (§7.6). |
+| Builder | The step you trust to build pages from screen configs that passed the check (§7.6). |
 | Extension request | Your agent's request to add something the design system lacks (§7.8). |
 | Core and Instance | A shared design system (Core) and a project design system that extends it (Instance) (§7.7). |
 | Conformant | A design system that passes the design-system check (§9). |
@@ -332,7 +336,7 @@ A design system claims **AINDF 0.1 conformance** when it:
 4. ensures every slot target and every modifier target resolves to a declared component or layer (no dangling edges);
 5. generates its agent docs / types / lint / MCP responses from those sources;
 6. exposes the AINDF MCP query surface (`list-by-facet`, `slot-accepts`, `applicable-modifiers`, `get-preset`);
-7. passes the AINDF design-system check (`aindf check`) with no errors.
+7. passes a conformance check of these sources with no errors.
 
 A design system claims **AINDF 0.2 conformance** (`conformsTo: "aindf@0.2"`) when, in addition:
 
@@ -348,8 +352,9 @@ A design system claims **AINDF 0.2 conformance** (`conformsTo: "aindf@0.2"`) whe
     need an author token, and never build, verify, accept or release;
 13. as an Instance on a Core, it passes the Core checks of §7.7.
 
-A broken rule fails with a stable rule ID and code; nothing is ignored, and nothing fixes a source or a screen on its
-own. The full list: [`packages/aindf-kit/RULES.md`](packages/aindf-kit/RULES.md). Schemas: 0.1 in
+For 0.2, `aindf check` runs this check; it accepts only `conformsTo: "aindf@0.2"`. Every rule it checks fails with a
+stable rule ID and code; nothing it checks is ignored, and nothing fixes a source or a screen on its own. Items 5 and 6
+(generation and the MCP surface) are not checked by the kit. The full list: [`packages/aindf-kit/RULES.md`](packages/aindf-kit/RULES.md). Schemas: 0.1 in
 [`schemas/`](schemas), 0.2 additions in [`packages/aindf-kit/schema/0.2`](packages/aindf-kit/schema/0.2).
 
 ## 10. Boundary
@@ -390,7 +395,7 @@ A test vector with a fixed hash (`a937eb5e…`): `packages/aindf-kit/test/canoni
 
 The reference implementation is [`packages/aindf-kit`](packages/aindf-kit), a pilot of version 0.2:
 
-- `aindf check` runs conformance; `aindf bundle` writes a bundle; `aindf build` runs the builder, and
+- `aindf check` runs conformance for 0.2 design systems; `aindf bundle` writes a bundle; `aindf build` runs the builder, and
   `aindf build --check` compares generated files; `--receipts` writes receipts; `aindf repin` moves screens to a new
   bundle, on explicit request and only for screens that admit against it; `aindf mcp` serves one bundle over stdio.
 - The builder generates Next.js App Router pages (`implementation.framework: "next-app"`) that import components from
