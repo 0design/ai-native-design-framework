@@ -11,11 +11,14 @@ components and brand.
 
 Three parties take part:
 
-| Who | Does | Cannot |
-|---|---|---|
-| You, the design-system owner | write the contracts, publish versions of the design system, accept results | — |
-| Your agent | looks up what the design system offers, writes screen configs, asks for what is missing | write HTML, CSS or code into a screen, change the design system or the checks |
-| The builder | builds pages from accepted screen configs and one pinned version of the design system | accept or release anything |
+| Who | Does |
+|---|---|
+| You, the design-system owner | write the contracts, publish versions of the design system, accept results |
+| Your agent, the screen author | looks up what the design system offers through MCP, writes screen configs, asks for what is missing |
+| The builder | builds pages from screen configs that passed the check, with one pinned version of the design system |
+
+A screen config cannot carry HTML, CSS or code: the check refuses it. Who may change the design system, the checks or
+the built pages is set by the access each party has, not by AINDF.
 
 ## How it works
 
@@ -75,8 +78,10 @@ The check answers:
 }
 ```
 
-Your agent does not style the headline by hand. It tells you that the design system has no colour or size for
-`Heading`, and you decide whether to add them. Run this example yourself with `node examples/demo-ds/examples.mjs`.
+Your agent does not style the headline by hand. It tells you that the design system has no color or size for
+`Heading`, and you decide whether to add them. To see this answer yourself, start the demo server with
+`node packages/aindf-kit/src/cli.mjs mcp examples/demo-ds/aindf-demo.bundle.json` and call `validate-screen` with this
+config.
 
 ## Glossary
 
@@ -87,13 +92,17 @@ Your agent does not style the headline by hand. It tells you that the design sys
 | Component contract | The closed list of props a screen may set on one component, with their types and limits (§7.1). |
 | Slot | A named place inside a component that holds other components (§3.1). |
 | Token tier | `foundations`, `semantic` or `component`; tokens reference downward only (§4). |
-| Modifier | A cross-cutting property, such as `tone`, applied out of band (§5). |
+| Modifier | A cross-cutting property, such as `emphasis` in the demo, applied out of band (§5). |
+| Prop | One setting of a component that a screen config may set, such as a heading's `text` (§7.1). |
+| MCP | Model Context Protocol: the way an agent asks a tool for data. The design system's MCP server answers what the design system offers and checks screen configs (§9). |
 | Preset | A ready-made component with its slots already filled (§6). |
 | Binding | A named data value or action that the design system implements; a screen refers to it by name (§7.2). |
 | Screen config (ScreenSpec) | The only file your agent writes: a route, a template and sections built from components (§7.3). |
 | Bundle | One immutable version of the design system, addressed by its content hash (§7.4). |
 | Pin | The design-system id, version and bundle hash a screen config is written for (§7.3). |
-| Check (admission) | The step that admits a screen config against one bundle or refuses it with codes (§7.5). |
+| Screen check (admission) | The step that admits a screen config against one bundle or refuses it with codes (§7.5). |
+| Design-system check (conformance) | The step that checks the design system itself, `aindf check` (§9). |
+| Screen author | Whoever writes screen configs; usually your agent (§7). |
 | Builder | The trusted step that builds pages from admitted screen configs (§7.6). |
 | Extension request | Your agent's request to add something the design system lacks (§7.8). |
 | Core and Instance | A shared design system (Core) and a project design system that extends it (Instance) (§7.7). |
@@ -117,7 +126,7 @@ A design system is AI-Native when it has these five properties:
 4. **Single source → generation**: contracts are authored once and all downstream artifacts (types, lint rules, agent
    docs, MCP responses) are generated, so they never drift.
 5. **Enforced, with people deciding**: checks refuse what the contracts do not allow. The design-system owner changes
-   the contracts and accepts results; a screen author cannot change the contracts or the checks.
+   the contracts and accepts results.
 
 ## 2. The contract graph
 
@@ -219,7 +228,7 @@ A contract MAY also declare:
 
 ### 7.2 Bindings (`bindings`)
 
-Data and behaviour live in the design system's implementation, never in a screen. The design system declares named
+Data and behavior live in the design system's implementation, never in a screen. The design system declares named
 **bindings**, each of one kind:
 
 | Kind | What it is | Where a screen uses it |
@@ -276,7 +285,7 @@ A result passes through states that are never collapsed into one claim: **built*
 **verified** (an independent check passed) → **accepted** (the design-system owner accepted it) → **released**. The
 builder only ever writes `built`; a receipt is not a signature and not acceptance.
 
-Before a build, an MCP server that can record drafts reports its own states to the author: a submitted screen that
+Before a build, an MCP server that can record drafts and requests reports its own states to the author: a submitted screen that
 fails admission is `rejected`; an admitted one is staged as a `draft` for the trusted builder; an extension request is
 `requested`.
 
@@ -334,9 +343,9 @@ A design system claims **AINDF 0.2 conformance** (`conformsTo: "aindf@0.2"`) whe
 10. every binding a contract refers to is declared (`bindings`) and every `binding` prop has an allowlist (bindings a
     screen's `meta` or `params` name are checked at admission, §7.5);
 11. it publishes versions as bundles (§7.4) and admits screens only against a pinned bundle (§7.5);
-12. its MCP server also exposes `get-ds`, `get-component` and `validate-screen`; tools that record drafts
-    (`submit-screen`, `request-extension`) are offered only where the server can record them, need an author token,
-    and never build, verify, accept or release;
+12. its MCP server also exposes `get-ds`, `get-component` and `validate-screen`; the tools that record a screen draft
+    or an extension request (`submit-screen`, `request-extension`) are offered only where the server can record them,
+    need an author token, and never build, verify, accept or release;
 13. as an Instance on a Core, it passes the Core checks of §7.7.
 
 A broken rule fails with a stable rule ID and code; nothing is ignored, and nothing fixes a source or a screen on its
