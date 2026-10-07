@@ -59,4 +59,4 @@ jobs:
         with:
           node-version: 22
       - run: node --test remote-demo/*.test.mjs
-      - run: npx --yes wrangler@4 deploy --dry-run --outdir /tmp/aindf-demo-mcp --config remote-demo/wrangler.jsonc
+      - run: npx --yes wrangler@4.148.0 deploy --dry-run --outdir /tmp/aindf-demo-mcp --config remote-demo/wrangler.jsonc

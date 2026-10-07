@@ -35,6 +35,20 @@ test('the staging tools are refused: nothing is recorded', async () => {
   }
 });
 
+test('a JSON-RPC batch is refused with -32600 (MCP 2025-06-18 has no batches)', async () => {
+  const one = { jsonrpc: '2.0', id: 1, method: 'tools/list' };
+  const r = await worker.fetch(new Request(url('/mcp'), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify([one, one]) }));
+  assert.equal(r.status, 400);
+  assert.equal((await r.json()).error.code, -32600);
+});
+
+test('the Worker keeps nothing: Cloudflare observability is off in its config', async () => {
+  const { readFileSync } = await import('node:fs');
+  const config = JSON.parse(readFileSync(new URL('./wrangler.jsonc', import.meta.url), 'utf8').replace(/^\s*\/\/.*$/gm, ''));
+  assert.deepEqual(config.observability, { enabled: false });
+  for (const key of ['kv_namespaces', 'r2_buckets', 'd1_databases', 'durable_objects', 'routes', 'route', 'vars', 'logpush', 'tail_consumers']) assert.equal(config[key], undefined, key);
+});
+
 test('GET /mcp is 405, an oversized body is 413, any other path is 404', async () => {
   assert.equal((await worker.fetch(new Request(url('/mcp')))).status, 405);
   const big = await worker.fetch(new Request(url('/mcp'), { method: 'POST', headers: { 'content-type': 'application/json' }, body: ' '.repeat(300 * 1024) }));
