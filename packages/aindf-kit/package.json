@@ -1,5 +1,5 @@
 {
-  "name": "@aindf/kit",
+  "name": "@ai-native-design-framework/kit",
   "version": "0.2.0-pilot.7",
   "private": true,
   "description": "AINDF v2 kit: conformance check, immutable DS bundle, ScreenSpec admission, Next.js codegen and a DS MCP server for any design system.",

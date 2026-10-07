@@ -1,4 +1,4 @@
-# @aindf/kit — AINDF v2 pilot kit
+# @ai-native-design-framework/kit — AINDF v2 pilot kit
 
 One dependency-free package for any design system that conforms to AINDF (`conformsTo: "aindf@0.2"`):
 
