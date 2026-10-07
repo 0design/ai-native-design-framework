@@ -1,10 +1,10 @@
 name: kit
 on:
   pull_request:
-    paths: ['packages/aindf-kit/**', '.github/workflows/kit.yml']
+    paths: ['packages/aindf-kit/**', 'examples/**', '.github/workflows/kit.yml']
   push:
     branches: [main]
-    paths: ['packages/aindf-kit/**', '.github/workflows/kit.yml']
+    paths: ['packages/aindf-kit/**', 'examples/**', '.github/workflows/kit.yml']
 permissions:
   contents: read
 jobs:
@@ -20,3 +20,30 @@ jobs:
         with:
           node-version: 22
       - run: node --test packages/aindf-kit/test/*.test.mjs
+  clean-install:
+    # pack the kit, install the tarball into an empty project and use it only as a consumer would (bin, exports, MCP)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        node: [20, 22]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: node packages/aindf-kit/scripts/clean-install.mjs
+  demo-examples:
+    # the three working examples of the demo design system, through `aindf mcp` over stdio
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node examples/demo-ds/examples.mjs

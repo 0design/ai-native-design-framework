@@ -1,5 +1,6 @@
 import { readSchema } from './schemas.mjs';
 import { validateSchema } from './schema.mjs';
+import { propValueError, propErrors, missingProps } from './admit.mjs';
 const LAYERS = ['atoms', 'elements', 'blocks', 'sections'];
 const SOURCE_SCHEMAS = { tokens: '0.1/tokens.schema.json', taxonomy: '0.1/taxonomy.schema.json', slots: '0.1/slots.schema.json', applicability: '0.1/applicability.schema.json', presets: '0.1/presets.schema.json', patterns: '0.1/patterns.schema.json', components: '0.2/components.schema.json', bindings: '0.2/bindings.schema.json' };
 const TOKEN_TARGETS = { foundations: [], semantic: ['foundations', 'semantic'], component: ['foundations', 'semantic', 'component'] };
@@ -34,8 +35,21 @@ export function checkDs({ config, sources, core }) {
       if (def.type === 'binding') for (const b of def.bindings ?? []) if (!bindingNames.has(b)) err('UNKNOWN_BINDING', `${at}.props.${p}`, b);
       if (def.type === 'richText' && def.hrefPattern) { try { new RegExp(def.hrefPattern); } catch { err('INVALID_HREF_PATTERN', `${at}.props.${p}`, def.hrefPattern); } }
       if (def.type === 'binding' && !def.bindings?.length) err('BINDING_WITHOUT_ALLOWLIST', `${at}.props.${p}`, 'binding prop needs allowed bindings');
+      // review of #9 (G11): a default is what an agent reads as the value to expect; it must be one a screen could set
+      if (Object.hasOwn(def, 'default')) { const bad = propValueError(def, def.default); if (bad) err('INVALID_DEFAULT', `${at}.props.${p}.default`, `${bad.code}: ${bad.message}`); }
     }
     for (const slot of Object.keys(c.slotProps ?? {})) if (!slotsets.get(c.name)?.slots.some(s => s.name === slot)) err('UNKNOWN_SLOT_PROP', at, slot);
+    // a contract's examples are what an agent copies from get-component: a good one must admit, a bad one must not
+    (c.examples?.good ?? []).forEach((props, i) => {
+      const at2 = `${at}.examples.good[${i}]`;
+      for (const e of [...propErrors(c, c.name, props, at2), ...missingProps(c, c.name, props, at2)]) err('INVALID_EXAMPLE', e.path, `good example is refused by admission: ${e.code} ${e.message}`);
+    });
+    (c.examples?.bad ?? []).forEach((item, i) => {
+      const { $expect, ...props } = item;
+      const codes = [...propErrors(c, c.name, props, ''), ...missingProps(c, c.name, props, '')].map(e => e.code);
+      if (!codes.length) err('INVALID_EXAMPLE', `${at}.examples.bad[${i}]`, 'bad example is admitted: it shows nothing an agent must avoid');
+      else if ($expect && !codes.includes($expect)) err('INVALID_EXAMPLE', `${at}.examples.bad[${i}].$expect`, `bad example is refused with ${[...new Set(codes)].join(', ')}, not ${$expect}`);
+    });
   }
   for (const set of slots.slotsets) {
     const owner = classified.get(set.component);

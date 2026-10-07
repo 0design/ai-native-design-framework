@@ -9,7 +9,7 @@ test('every error code the kit can emit has a stable rule ID in RULES.md, and ID
   const emitted = new Set();
   for (const f of readdirSync(new URL('../src/', import.meta.url))) {
     const src = readFileSync(new URL(`../src/${f}`, import.meta.url), 'utf8');
-    for (const m of src.matchAll(/(?:err|fail|toolError)\('([A-Z_]+)'|new AindfError\('([A-Z_]+)'|\? '([A-Z_]+)' : '([A-Z_]+)'/g)) for (const c of m.slice(1)) if (c) emitted.add(c);
+    for (const m of src.matchAll(/(?:err|fail|toolError)\('([A-Z_]+)'|code: '([A-Z_]+)'|new AindfError\('([A-Z_]+)'|\? '([A-Z_]+)' : '([A-Z_]+)'/g)) for (const c of m.slice(1)) if (c) emitted.add(c);
   }
   const missing = [...emitted].filter(c => !listed.has(c));
   assert.deepEqual(missing, [], `codes without a rule ID: ${missing}`);

@@ -76,16 +76,34 @@
             "good": {
               "type": "array",
               "items": {
-                "type": "object"
+                "type": "object",
+                "description": "props a screen may set; must be admitted"
               }
             },
             "bad": {
               "type": "array",
               "items": {
-                "type": "object"
+                "type": "object",
+                "description": "props a screen must not set; must be refused. Optional \"$expect\" names the admission code the refusal must include ($ is never a prop name).",
+                "properties": {
+                  "$expect": {
+                    "enum": [
+                      "UNKNOWN_PROP",
+                      "MISSING_PROP",
+                      "INVALID_TEXT",
+                      "INVALID_TEXT_LIST",
+                      "INVALID_ENUM",
+                      "INVALID_BOOLEAN",
+                      "INVALID_NUMBER",
+                      "UNKNOWN_BINDING",
+                      "INVALID_RICH_TEXT"
+                    ]
+                  }
+                }
               }
             }
-          }
+          },
+          "description": "Examples an agent reads from get-component. Each item is the props of one node of this component, as a screen would set them: no component name, slots or route. aindf check requires every good item to be admitted and every bad item to be refused (AINDF-DS-33)."
         },
         "status": {
           "enum": [

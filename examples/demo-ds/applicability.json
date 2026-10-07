@@ -1,0 +1,20 @@
+{
+  "aindfVersion": "0.1",
+  "modifierCategories": [
+    "emphasis"
+  ],
+  "modifiers": [
+    {
+      "category": "emphasis",
+      "values": [
+        "primary",
+        "quiet"
+      ],
+      "appliesTo": {
+        "components": [
+          "Button"
+        ]
+      }
+    }
+  ]
+}

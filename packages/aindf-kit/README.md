@@ -19,7 +19,11 @@ The kit contains no design system (test: no QFactory strings in `src/`; `test/fi
 Limits: a builder receipt is not a signature; verified/accepted/released are never written by the kit; isolation of
 the author principal comes from deployment rights, not from this package.
 
-## Instance on Core (`ds.core` + `ds.coreBundle` + `ds.coreBundleSha256`, 0.2.0-pilot.5)
+Clean install: `node scripts/clean-install.mjs` packs this package, installs the tarball into an empty project and uses
+it only as a consumer would — the `aindf` bin (check, bundle, build, `--check`), the package exports and the MCP over
+stdio — each step with a negative. CI runs it on Node 20 and 22 and prints the tarball sha256 and kit version it checked.
+
+## Instance on Core (`ds.core` + `ds.coreBundle` + `ds.coreBundleSha256`, 0.2.0-pilot.6)
 
 An Instance that extends a Core pins it in `aindf.config.json` three ways: `ds.core` (`id@version`), `ds.coreBundle`
 (path to that Core's AINDF bundle) and `ds.coreBundleSha256` (the bundle's content hash; a self-consistent bundle with the

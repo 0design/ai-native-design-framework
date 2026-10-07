@@ -1,0 +1,28 @@
+{
+  "aindfVersion": "0.1",
+  "presets": [
+    {
+      "name": "hero-with-signup",
+      "builtOn": "Hero",
+      "slots": {
+        "title": [
+          {
+            "component": "Heading",
+            "props": {
+              "text": "Build screens from your design system"
+            }
+          }
+        ],
+        "actions": [
+          {
+            "component": "Button",
+            "props": {
+              "label": "Sign up",
+              "action": "signup"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
