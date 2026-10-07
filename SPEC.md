@@ -43,13 +43,13 @@ the built pages is set by the access each party has, not by AINDF.
 
 You ask your agent: *"Make the headline violet and bigger."* The demo design system in
 [`examples/demo-ds`](examples/demo-ds) has a `Heading` whose only prop is `text`. Your agent writes this screen
-config (the bundle hash is shortened here):
+config:
 
 ```json
 {
   "kind": "aindf.screen",
   "aindfVersion": "0.2",
-  "ds": { "id": "aindf-demo", "version": "0.1.0", "bundleSha256": "5d99ff81…538a" },
+  "ds": { "id": "aindf-demo", "version": "0.1.0", "bundleSha256": "5d99ff815ead205a4f78870f4fa3ff5803fae858a5e1015df0e140219efd538a" },
   "route": "/pricing",
   "template": { "component": "Page", "props": { "title": "Pricing" } },
   "sections": [
@@ -79,8 +79,8 @@ The check answers:
 ```
 
 Your agent does not style the headline by hand. It tells you that the design system has no color or size for
-`Heading`, and you decide whether to add them. To see this answer yourself, start the demo server with
-`node packages/aindf-kit/src/cli.mjs mcp examples/demo-ds/aindf-demo.bundle.json` and call `validate-screen` with this
+`Heading`, and you decide whether to add them. To see this answer yourself, install the [plugin](plugin), leave
+its design-system bundle setting empty so it serves the demo, and ask your agent to call `validate-screen` with this
 config.
 
 ## Glossary
@@ -106,7 +106,7 @@ config.
 | Builder | The trusted step that builds pages from admitted screen configs (§7.6). |
 | Extension request | Your agent's request to add something the design system lacks (§7.8). |
 | Core and Instance | A shared design system (Core) and a project design system that extends it (Instance) (§7.7). |
-| Conformant | A design system that passes the AINDF checks (§9). |
+| Conformant | A design system that passes the design-system check (§9). |
 
 ---
 
@@ -131,7 +131,7 @@ A design system is AI-Native when it has these five properties:
 ## 2. The contract graph
 
 A conformant system is a typed graph with four kinds of edges. Each edge is declared once in a machine-readable source
-and enforced by the validator.
+and enforced by the design-system check.
 
 | Edge | From → To | Source schema |
 |---|---|---|
@@ -332,7 +332,7 @@ A design system claims **AINDF 0.1 conformance** when it:
 4. ensures every slot target and every modifier target resolves to a declared component or layer (no dangling edges);
 5. generates its agent docs / types / lint / MCP responses from those sources;
 6. exposes the AINDF MCP query surface (`list-by-facet`, `slot-accepts`, `applicable-modifiers`, `get-preset`);
-7. passes the AINDF conformance validator with no errors.
+7. passes the AINDF design-system check (`aindf check`) with no errors.
 
 A design system claims **AINDF 0.2 conformance** (`conformsTo: "aindf@0.2"`) when, in addition:
 
@@ -354,7 +354,7 @@ own. The full list: [`packages/aindf-kit/RULES.md`](packages/aindf-kit/RULES.md)
 
 ## 10. Boundary
 
-AINDF contains schemas, a validator, an MCP protocol and generators, and nothing else. It carries no palette, no fixed
+AINDF contains schemas, the checks, an MCP protocol and generators, and nothing else. It carries no palette, no fixed
 modifier set and no component library. Conformance test: *could a completely different design system, with its own
 tokens, components and modifier vocabulary, be built using only AINDF?* If yes, the boundary is clean.
 
