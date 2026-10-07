@@ -1,8 +1,8 @@
 name: demo-mcp deploy
 # Deploys the read-only remote demo MCP (remote-demo/) to its workers.dev test address. Manual only, only from main.
 # Runs in the GitHub Environment `demo-mcp`: its branch policy (main only), required reviewer and the secrets
-# CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID are set in that Environment (see remote-demo/README.md); without them it
-# fails. No custom domain until the v2 release.
+# CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID are set in that Environment (see remote-demo/README.md); without the
+# secrets it fails. No custom domain until the v2 release.
 on:
   workflow_dispatch:
 permissions:
