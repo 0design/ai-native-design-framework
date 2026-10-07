@@ -14,12 +14,12 @@ Three parties take part:
 
 | Who | Does |
 |---|---|
-| You, the design-system owner | write the contracts, publish versions of the design system, accept results |
+| You, the design-system owner | write the contracts (the JSON files that describe the design system), publish versions of the design system, accept results |
 | Your agent, the screen author | looks up what the design system offers through MCP (the protocol agents use to ask a tool for data), writes screen configs, asks for what is missing |
 | The builder | builds pages from screen configs that passed the check, with the one version of the design system each config names |
 
 The check runs when your agent calls `validate-screen` (the design system's MCP tool for it) and again inside every
-build. You or your CI run the build (`aindf build`); it writes the pages into your app. A screen config cannot carry
+build. You or your CI (the checks that run on every pull request) run the build (`aindf build`); it writes the pages into your app. A screen config cannot carry
 HTML, CSS or code: the check refuses it. Who may change the design system, the checks or the built pages is set by the
 access each party has, not by AINDF.
 
@@ -46,7 +46,7 @@ access each party has, not by AINDF.
 
 You ask your agent: *"Make the headline violet and bigger."* The demo design system in
 [`examples/demo-ds`](examples/demo-ds) has a `Heading` whose only prop (a setting a screen may set) is `text`. Your
-agent writes this screen config. It names the design-system version it is written for (`ds`, with the hash of that
+agent writes this screen config. It names the design-system version it is written for (`ds`, with the hash (a fingerprint of the content) of that
 version's bundle, the one file that holds that version), the page address (`route`), the page frame (`template`) and the sections inside it:
 
 ```json
@@ -95,7 +95,7 @@ so it serves the demo, and ask your agent to call `validate-screen` with this co
 | Contract source | One JSON file of the design system: `tokens`, `taxonomy`, `slots`, `applicability`, `presets`, `components`, `bindings` (§2, §7). |
 | Component contract | The closed list of props a screen may set on one component, with their types and limits (§7.1). |
 | Slot | A named place inside a component that holds other components (§3.1). |
-| Token tier | `foundations`, `semantic` or `component`; tokens reference downward only (§4). |
+| Token tier | `foundations`, `semantic` or `component`: raw values, values by meaning, values for one component (§4). |
 | Modifier | A setting that can apply to many components, such as `emphasis` in the demo, kept apart from their props (§5). |
 | Prop | One setting of a component that a screen config may set, such as a heading's `text` (§7.1). |
 | MCP | Model Context Protocol: the way an agent asks a tool for data. The design system's MCP server answers what the design system offers and checks screen configs (§9). |
@@ -144,8 +144,8 @@ and enforced by the design-system check.
 | Modifier applicability | modifier → component / layer | `applicability` |
 | Preset | preset → component + filled slots | `presets` |
 
-The graph is traversable in both directions (a slot's allowed content, and the slots a component may fill) and is the
-data an AINDF MCP server exposes.
+The graph is traversable in both directions (a slot's allowed content, and the slots a component may fill); the MCP
+server answers the first direction: what a slot accepts.
 
 Version 0.2 adds two sources and one authored artifact on top of this graph: closed **component contracts** (§7.1),
 named **bindings** (§7.2), and the **ScreenSpec** (§7.3), the only file a screen author writes.
@@ -353,7 +353,7 @@ A design system claims **AINDF 0.2 conformance** (`conformsTo: "aindf@0.2"`) whe
 13. as an Instance on a Core, it passes the Core checks of §7.7.
 
 For 0.2, `aindf check` runs this check; it accepts only `conformsTo: "aindf@0.2"`. Every rule it checks fails with a
-stable rule ID and code; nothing it checks is ignored, and nothing fixes a source or a screen on its own. Items 5 and 6
+stable rule ID and code; nothing it checks is ignored, and nothing fixes a source or a screen on its own. Items 5, 6 and 12
 (generation and the MCP surface) are not checked by the kit. The full list: [`packages/aindf-kit/RULES.md`](packages/aindf-kit/RULES.md). Schemas: 0.1 in
 [`schemas/`](schemas), 0.2 additions in [`packages/aindf-kit/schema/0.2`](packages/aindf-kit/schema/0.2).
 
