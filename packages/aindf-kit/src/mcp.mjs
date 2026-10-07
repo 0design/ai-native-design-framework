@@ -27,7 +27,7 @@ const ANNOTATIONS = {
   'submit-screen': { title: 'Submit screen draft', ...STAGE }, 'request-extension': { title: 'Request design system extension', ...STAGE },
 };
 const STAGING_TOOLS = new Set(['submit-screen', 'request-extension']);
-const ANNOTATED = TOOLS.map(t => ({ ...t, title: ANNOTATIONS[t.name].title, annotations: ANNOTATIONS[t.name] }));
+const ANNOTATED = Object.freeze(TOOLS.map(t => Object.freeze({ ...t, title: ANNOTATIONS[t.name].title, annotations: Object.freeze({ ...ANNOTATIONS[t.name] }) })));
 const text = value => ({ content: [{ type: 'text', text: JSON.stringify(value, null, 2) }], structuredContent: value });
 // Cut by code points, never inside a surrogate pair (a cut emoji would leave a lone surrogate the server then refuses).
 const clip = (s, n) => Array.from(s).slice(0, n).join('');
