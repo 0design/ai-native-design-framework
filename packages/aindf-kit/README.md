@@ -12,8 +12,10 @@ One dependency-free package for any design system that conforms to AINDF (`confo
 v0.2 additions to the public AINDF 0.1 contract graph: `components` (closed prop/slot/state contracts, templates),
 `bindings` (named data/action adapters implemented by the DS), `screen` (the only author artifact), `receipt`, `config`.
 MCP surface: AINDF 0.1 `list-by-facet`, `slot-accepts`, `applicable-modifiers`, `get-preset` plus `get-ds`,
-`get-component`, `validate-screen`, `submit-screen` and `request-extension` (the last two need an author token and
-only stage unaccepted drafts).
+`get-component`, `validate-screen`, `submit-screen` and `request-extension`. The last two are offered only by an
+endpoint with staging (e.g. a hosted DS-MCP), need an author token and only stage unaccepted drafts; a read-only
+endpoint such as `aindf mcp` lists 7 tools, and an agent reports the need or the validated ScreenSpec to the user.
+Every tool carries a `title` and MCP hints (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`).
 
 The kit contains no design system (test: no QFactory strings in `src/`; `test/fixtures/tiny-ds` is a second DS).
 Limits: a builder receipt is not a signature; verified/accepted/released are never written by the kit; isolation of

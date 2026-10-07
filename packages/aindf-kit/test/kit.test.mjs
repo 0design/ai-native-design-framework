@@ -189,3 +189,22 @@ test('[AINDF-DS-33] a bad example with $expect must be refused with that code', 
   assert.deepEqual(checkDs(fresh({ bad: [{ label: 'Go', action: 'signup', $expect: 'UNKNOWN_PROP' }] })).map(e => `${e.code} ${e.path}`), ['INVALID_EXAMPLE components.Cta.examples.bad[0]'], 'an admitted bad example still fails first');
   assert.deepEqual(checkDs(fresh({ bad: [{ className: 'x', $expect: 'NOPE' }] })).map(e => e.code), ['SCHEMA'], 'an unknown expected code is a schema error');
 });
+
+// plugin plan A5: a read-only server does not offer tools that can only answer READ_ONLY; every tool is annotated
+test('MCP tools/list: 7 read tools without staging, 9 with it; each has a title and read/destructive hints', async () => {
+  const list = async h => (await h({ jsonrpc: '2.0', id: 1, method: 'tools/list' })).result.tools;
+  const readOnly = createDsMcp(bundle);
+  const staged = createDsMcp(bundle, { staging: { authorize: () => 'a', put: async () => ({ created: true }) } });
+  const ro = await list(readOnly), all = await list(staged);
+  assert.equal(ro.length, 7); assert.equal(all.length, 9);
+  assert.deepEqual(all.filter(t => !ro.some(r => r.name === t.name)).map(t => t.name), ['submit-screen', 'request-extension']);
+  for (const t of all) {
+    assert.ok(t.title && t.annotations.title === t.title, `${t.name} title`);
+    assert.equal(typeof t.annotations.readOnlyHint, 'boolean', `${t.name} readOnlyHint`);
+    assert.equal(t.annotations.openWorldHint, false, `${t.name} openWorldHint`);
+    if (!t.annotations.readOnlyHint) assert.equal(t.annotations.destructiveHint, false, `${t.name} destructiveHint`);
+  }
+  assert.ok(ro.every(t => t.annotations.readOnlyHint), 'every tool offered without staging is read-only');
+  const direct = (await readOnly({ jsonrpc: '2.0', id: 2, method: 'tools/call', params: { name: 'submit-screen', arguments: {} } })).result;
+  assert.equal(direct.isError, true); assert.equal(direct.structuredContent.code, 'READ_ONLY');
+});
