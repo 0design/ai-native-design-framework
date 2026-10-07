@@ -4,7 +4,7 @@ A small design system written down as AINDF 0.2 contracts. It exists to show the
 product, and it has no implementation: `@aindf-demo/ds` is a placeholder module name.
 
 It runs on the unreleased v2 pilot kit in [`packages/aindf-kit`](../../packages/aindf-kit), not on an installable
-tool (see [What's in this repo](../../README.md#whats-in-this-repo)).
+tool.
 
 - Components: `Page` (template), `Hero`, `FeatureList`, `ContactForm` (sections); `Heading`, `Button`, `Field` (elements).
 - Bindings: `signup`, `sendContact` (actions).
