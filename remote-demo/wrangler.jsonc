@@ -1,5 +1,5 @@
 {
-  // AINDF remote demo MCP. Test address on workers.dev until the v2 release (owner decision 07.10); no custom domain,
+  // AINDF remote demo MCP. Test address on workers.dev until the v2 release; no custom domain,
   // no storage, no bindings, no secrets. Deployed only by .github/workflows/demo-mcp.yml from main.
   "name": "aindf-demo-mcp",
   "main": "worker.mjs",

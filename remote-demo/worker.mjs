@@ -1,4 +1,4 @@
-// Remote demo MCP (plugin plan step 5): the AINDF demo design system over Streamable HTTP, read-only.
+// Remote demo MCP: the AINDF demo design system over Streamable HTTP, read-only.
 //   POST /mcp     MCP JSON-RPC, no staging: the 7 read-only tools; the staging tools answer READ_ONLY
 //   GET  /health  status, the served pin and the kit version (no request data, no logging)
 // Test address only (workers.dev) until the v2 release; no custom domain, no storage, no bindings.

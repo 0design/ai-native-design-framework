@@ -190,7 +190,7 @@ test('[AINDF-DS-33] a bad example with $expect must be refused with that code', 
   assert.deepEqual(checkDs(fresh({ bad: [{ className: 'x', $expect: 'NOPE' }] })).map(e => e.code), ['SCHEMA'], 'an unknown expected code is a schema error');
 });
 
-// plugin plan A5: a read-only server does not offer tools that can only answer READ_ONLY; every tool is annotated
+// A read-only server does not offer tools that can only answer READ_ONLY; every tool is annotated
 test('MCP tools/list: 7 read tools without staging, 9 with it; each has a title and read/destructive hints', async () => {
   const list = async h => (await h({ jsonrpc: '2.0', id: 1, method: 'tools/list' })).result.tools;
   const readOnly = createDsMcp(bundle);

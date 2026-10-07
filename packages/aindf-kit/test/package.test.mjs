@@ -1,4 +1,4 @@
-// npm readiness (plugin plan step 4): the package is ready to publish but stays private until the v2 release.
+// npm readiness: the package is ready to publish but stays private until the v2 release.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
@@ -10,9 +10,9 @@ const dir = fileURLToPath(new URL('..', import.meta.url));
 const pkg = JSON.parse(readFileSync(`${dir}package.json`, 'utf8'));
 const server = JSON.parse(readFileSync(`${dir}server.json`, 'utf8'));
 
-test('the package stays private until the v2 release (owner decision 07.10)', () => {
+test('the package stays private until the v2 release', () => {
   assert.equal(pkg.private, true);
-  // npm organization chosen by the owner 07.10; the MCP Registry name is a separate namespace
+  // the npm organization; the MCP Registry name is a separate namespace
   assert.equal(pkg.name, '@ai-native-design-framework/kit');
 });
 
