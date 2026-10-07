@@ -1,0 +1,211 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aindf.oleg.design/schemas/0.2/components.schema.json",
+  "title": "AINDF Component contracts",
+  "description": "v0.2 closed prop/slot/state contract per component. Every prop an author may set is declared with a closed type; anything undeclared (className, style, handlers, children, markup) is rejected. Behaviour, data and actions live in the DS implementation and are reachable only through declared bindings.",
+  "type": "object",
+  "required": [
+    "aindfVersion",
+    "components"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "aindfVersion": {
+      "type": "string"
+    },
+    "components": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/contract"
+      }
+    }
+  },
+  "$defs": {
+    "contract": {
+      "type": "object",
+      "required": [
+        "name",
+        "export",
+        "props"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "export": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Za-z0-9]*$"
+        },
+        "description": {
+          "type": "string"
+        },
+        "template": {
+          "type": "boolean",
+          "description": "true: may be a screen template; the screen's sections render as its children"
+        },
+        "props": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/prop"
+          }
+        },
+        "slotProps": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "slot name -> React prop receiving the slot content"
+        },
+        "states": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "accessibility": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "examples": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "good": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "description": "props a screen may set; must be admitted"
+              }
+            },
+            "bad": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "description": "props a screen must not set; must be refused. Optional \"$expect\" names the admission code the refusal must include ($ is never a prop name).",
+                "properties": {
+                  "$expect": {
+                    "enum": [
+                      "UNKNOWN_PROP",
+                      "MISSING_PROP",
+                      "INVALID_TEXT",
+                      "INVALID_TEXT_LIST",
+                      "INVALID_ENUM",
+                      "INVALID_BOOLEAN",
+                      "INVALID_NUMBER",
+                      "UNKNOWN_BINDING",
+                      "INVALID_RICH_TEXT"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "description": "Examples an agent reads from get-component. Each item is the props of one node of this component, as a screen would set them: no component name, slots or route. aindf check requires every good item to be admitted and every bad item to be refused (AINDF-DS-33)."
+        },
+        "status": {
+          "enum": [
+            "stable",
+            "beta",
+            "experimental",
+            "deprecated"
+          ]
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "requirement / decision references"
+        },
+        "routeParams": {
+          "type": "boolean",
+          "description": "true: receives the route parameters of a [param] route as `routeParams`"
+        }
+      }
+    },
+    "prop": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "enum": [
+            "text",
+            "enum",
+            "boolean",
+            "number",
+            "textList",
+            "binding",
+            "richText"
+          ]
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "enum values"
+        },
+        "bindings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "allowed binding names for type binding"
+        },
+        "maxLength": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "minItems": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maxItems": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "minimum": {
+          "type": "number"
+        },
+        "maximum": {
+          "type": "number"
+        },
+        "default": {},
+        "description": {
+          "type": "string"
+        },
+        "marks": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "strong",
+              "code",
+              "link"
+            ]
+          },
+          "description": "richText: allowed inline marks"
+        },
+        "inlineComponents": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "richText: DS inline components an author may place by name"
+        },
+        "hrefPattern": {
+          "type": "string",
+          "description": "richText links: allowed href regular expression"
+        }
+      }
+    }
+  }
+}

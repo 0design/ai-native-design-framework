@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aindf.oleg.design/schemas/slots.schema.json",
+  "title": "AINDF Slots",
+  "description": "Slot contracts: what each slot accepts (by layer / component / contract), how many, and in what order.",
+  "type": "object",
+  "required": ["aindfVersion", "slotsets"],
+  "additionalProperties": false,
+  "properties": {
+    "aindfVersion": { "type": "string" },
+    "slotsets": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/slotset" }
+    }
+  },
+  "$defs": {
+    "slotset": {
+      "type": "object",
+      "required": ["component", "slots"],
+      "additionalProperties": false,
+      "properties": {
+        "component": { "type": "string" },
+        "slots": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/slot" }
+        }
+      }
+    },
+    "slot": {
+      "type": "object",
+      "required": ["name", "accepts", "cardinality"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "description": "BEM slot, e.g. card__body" },
+        "accepts": {
+          "type": "object",
+          "description": "at least one of: layers, components, contracts",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "properties": {
+            "layers": {
+              "type": "array",
+              "items": { "enum": ["atoms", "elements", "blocks", "sections"] }
+            },
+            "components": { "type": "array", "items": { "type": "string" } },
+            "contracts": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "cardinality": { "enum": ["0..1", "1..1", "0..*", "1..*"] },
+        "order": { "type": "integer" },
+        "required": { "type": "boolean" }
+      }
+    }
+  }
+}

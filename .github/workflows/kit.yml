@@ -1,10 +1,10 @@
 name: kit
 on:
   pull_request:
-    paths: ['packages/aindf-kit/**', 'examples/**', '.github/workflows/kit.yml']
+    paths: ['packages/aindf-kit/**', 'examples/**', 'plugin/**', '.github/workflows/kit.yml']
   push:
     branches: [main]
-    paths: ['packages/aindf-kit/**', 'examples/**', '.github/workflows/kit.yml']
+    paths: ['packages/aindf-kit/**', 'examples/**', 'plugin/**', '.github/workflows/kit.yml']
 permissions:
   contents: read
 jobs:
@@ -63,3 +63,18 @@ jobs:
         run: |
           curl -sfL "$SCHEMA_URL" -o /tmp/server.schema.json
           npx --yes -p ajv-cli@5 -p ajv-formats@2 ajv validate --spec=draft7 --strict=false -c ajv-formats -s /tmp/server.schema.json -d packages/aindf-kit/server.json
+  plugin:
+    # the plugin as Claude Code starts it: copies, manifest, MCP entry, server; then the official validator
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node plugin/scripts/check.mjs
+      - run: npx --yes "@anthropic-ai/claude-code@$CLAUDE_CODE_VERSION" --version && npx --yes "@anthropic-ai/claude-code@$CLAUDE_CODE_VERSION" plugin validate --strict plugin
+        env:
+          CLAUDE_CODE_VERSION: 2.1.292 # pinned; raise on purpose
