@@ -3,8 +3,8 @@
 **Draft. Not approved, not published.** Texts for the pages a plugin listing needs (plugin packaging plan, step A6).
 The owner approves every text and decides where these pages live: the URL paths are not set here.
 
-Every block ends with its sources: `file:line` at AINDF commit `c0effe6e`. W = `0design/Oleg.Design_Website` @
-`405dbc3b` (branch `claude/unslop-legal-drafts`, the UNSLOP pages these follow). A block without a code source states
+Every block ends with its sources: `file:line` at AINDF commit `c0effe6e`, or a public page. They follow the
+structure of the UNSLOP listing drafts. A block without a code source states
 a plan or a limit and says so. Not covered: the `plugin/` folder (plan steps A2/A3) does not exist yet. Every
 statement about "the plugin" below describes the local MCP server the plugin will run, `aindf mcp`, and must be
 re-checked against `plugin/` before submission.
@@ -58,7 +58,7 @@ itself; the plugin does not use it.*
 
 > For help with AINDF, email [banana@oleg.design](mailto:banana@oleg.design).
 
-*Sources: W `data/site.ts:7`; same contact as the UNSLOP support page (W `app/unslop/[doc]/docs.ts`, `support`).*
+*Sources: the oleg.design home page footer (checked 07.10.2026); the same contact as the UNSLOP support drafts.*
 
 > Questions and bug reports can also go to the GitHub issues of
 > [0design/ai-native-design-framework](https://github.com/0design/ai-native-design-framework/issues).
