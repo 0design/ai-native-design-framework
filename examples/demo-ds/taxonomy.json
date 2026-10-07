@@ -1,0 +1,74 @@
+{
+  "aindfVersion": "0.1",
+  "roles": [
+    "layout",
+    "display",
+    "interactive",
+    "form"
+  ],
+  "components": [
+    {
+      "name": "Page",
+      "layer": "sections",
+      "role": "layout",
+      "renderTargets": [
+        "inline"
+      ],
+      "hasSlots": false
+    },
+    {
+      "name": "Hero",
+      "layer": "sections",
+      "role": "display",
+      "renderTargets": [
+        "inline"
+      ],
+      "hasSlots": true
+    },
+    {
+      "name": "FeatureList",
+      "layer": "sections",
+      "role": "display",
+      "renderTargets": [
+        "inline"
+      ],
+      "hasSlots": false
+    },
+    {
+      "name": "ContactForm",
+      "layer": "sections",
+      "role": "form",
+      "renderTargets": [
+        "inline"
+      ],
+      "hasSlots": true
+    },
+    {
+      "name": "Heading",
+      "layer": "elements",
+      "role": "display",
+      "renderTargets": [
+        "inline"
+      ],
+      "hasSlots": false
+    },
+    {
+      "name": "Button",
+      "layer": "elements",
+      "role": "interactive",
+      "renderTargets": [
+        "inline"
+      ],
+      "hasSlots": false
+    },
+    {
+      "name": "Field",
+      "layer": "elements",
+      "role": "form",
+      "renderTargets": [
+        "inline"
+      ],
+      "hasSlots": false
+    }
+  ]
+}

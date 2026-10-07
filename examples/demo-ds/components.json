@@ -1,0 +1,188 @@
+{
+  "aindfVersion": "0.2",
+  "components": [
+    {
+      "name": "Page",
+      "export": "Page",
+      "template": true,
+      "description": "Page frame; the screen sections render inside it.",
+      "props": {
+        "title": {
+          "type": "text",
+          "required": true,
+          "maxLength": 80
+        }
+      }
+    },
+    {
+      "name": "Hero",
+      "export": "Hero",
+      "description": "Opening section with one heading and optional buttons.",
+      "props": {
+        "tone": {
+          "type": "enum",
+          "values": [
+            "calm",
+            "bold"
+          ],
+          "default": "calm"
+        }
+      },
+      "slotProps": {
+        "title": "title",
+        "actions": "actions"
+      },
+      "examples": {
+        "good": [
+          {
+            "tone": "bold"
+          }
+        ],
+        "bad": [
+          {
+            "tone": "loud",
+            "$expect": "INVALID_ENUM"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FeatureList",
+      "export": "FeatureList",
+      "description": "A titled list of short benefits.",
+      "props": {
+        "title": {
+          "type": "text",
+          "required": true,
+          "maxLength": 60
+        },
+        "items": {
+          "type": "textList",
+          "minItems": 1,
+          "maxItems": 6,
+          "maxLength": 120,
+          "required": true
+        }
+      },
+      "examples": {
+        "good": [
+          {
+            "title": "Why teams use it",
+            "items": [
+              "One source of truth",
+              "Checked before it ships"
+            ]
+          }
+        ],
+        "bad": [
+          {
+            "title": "Why",
+            "items": [],
+            "$expect": "INVALID_TEXT_LIST"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ContactForm",
+      "export": "ContactForm",
+      "description": "A form that sends its fields to the team.",
+      "props": {
+        "submitLabel": {
+          "type": "text",
+          "required": true,
+          "maxLength": 30
+        },
+        "action": {
+          "type": "binding",
+          "bindings": [
+            "sendContact"
+          ],
+          "required": true
+        }
+      },
+      "slotProps": {
+        "fields": "fields"
+      }
+    },
+    {
+      "name": "Heading",
+      "export": "Heading",
+      "props": {
+        "text": {
+          "type": "text",
+          "required": true,
+          "maxLength": 80
+        }
+      },
+      "examples": {
+        "good": [
+          {
+            "text": "Pricing"
+          }
+        ],
+        "bad": [
+          {
+            "text": "Pricing",
+            "color": "violet",
+            "$expect": "UNKNOWN_PROP"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Button",
+      "export": "Button",
+      "props": {
+        "label": {
+          "type": "text",
+          "required": true,
+          "maxLength": 30
+        },
+        "action": {
+          "type": "binding",
+          "bindings": [
+            "signup"
+          ],
+          "required": true
+        }
+      },
+      "examples": {
+        "good": [
+          {
+            "label": "Sign up",
+            "action": "signup"
+          }
+        ],
+        "bad": [
+          {
+            "label": "Sign up",
+            "action": "signup",
+            "className": "bg-violet-500",
+            "$expect": "UNKNOWN_PROP"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Field",
+      "export": "Field",
+      "props": {
+        "label": {
+          "type": "text",
+          "required": true,
+          "maxLength": 40
+        },
+        "kind": {
+          "type": "enum",
+          "values": [
+            "text",
+            "email",
+            "message"
+          ],
+          "required": true
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "aindfVersion": "0.2",
+  "bindings": [
+    {
+      "name": "signup",
+      "kind": "action",
+      "description": "open the sign-up flow"
+    },
+    {
+      "name": "sendContact",
+      "kind": "action",
+      "description": "send the contact form to the team inbox",
+      "sideEffects": [
+        "sends a message"
+      ]
+    }
+  ]
+}
