@@ -36,8 +36,8 @@ access each party has, not by AINDF.
        │
        ▼
   check ── refused: "Heading has no prop color; …" ──▶ your agent asks you
-       │                                            to add it to your
-       │ passes                                     design system
+       │                                               to add it to your
+       │ passes                                        design system
        ▼
   builder ──▶ a screen built only from your design system
 ```
