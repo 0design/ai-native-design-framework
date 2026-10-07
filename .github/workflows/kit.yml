@@ -1,10 +1,10 @@
 name: kit
 on:
   pull_request:
-    paths: ['packages/aindf-kit/**', 'examples/**', '.github/workflows/kit.yml']
+    paths: ['packages/aindf-kit/**', 'examples/**', 'remote-demo/**', '.github/workflows/kit.yml']
   push:
     branches: [main]
-    paths: ['packages/aindf-kit/**', 'examples/**', '.github/workflows/kit.yml']
+    paths: ['packages/aindf-kit/**', 'examples/**', 'remote-demo/**', '.github/workflows/kit.yml']
 permissions:
   contents: read
 jobs:
@@ -47,3 +47,16 @@ jobs:
         with:
           node-version: 22
       - run: node examples/demo-ds/examples.mjs
+  remote-demo:
+    # the remote demo MCP Worker: behaviour in Node, then a Wrangler build without deploying (no credentials needed)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --test remote-demo/*.test.mjs
+      - run: npx --yes wrangler@4 deploy --dry-run --outdir /tmp/aindf-demo-mcp --config remote-demo/wrangler.jsonc
