@@ -11,7 +11,7 @@
 
 ## Install
 
-The kit is on npm, so no clone is needed. You need Node.js 20.10 or newer. From your design system's folder:
+The prompt above works from a clone; the kit is also on npm, so you can do the same without one. You need Node.js 20.10 or newer. From your design system's folder:
 
 ```sh
 npx -y @ai-native-design-framework/kit check aindf.config.json
