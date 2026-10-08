@@ -3,6 +3,7 @@
 //   server/kit/  <- packages/aindf-kit (src, schema, package.json, RULES.md) + LICENSE
 //   skills/aindf-screen-author/SKILL.md <- packages/aindf-kit/skill/SKILL.md
 //   demo/aindf-demo.bundle.json <- examples/demo-ds/aindf-demo.bundle.json
+//   .claude-plugin/icon.png <- brand-assets/favicon/aindf-favicon-1024.png
 // The plugin never edits these copies: change the source, then run this script. --check exits 1 on any difference
 // and on any copy whose bytes no longer match plugin/COPIES.SHA256SUMS.
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, rmSync, existsSync, statSync } from 'node:fs';
@@ -21,6 +22,7 @@ const copies = [
   [join(repo, 'LICENSE'), join(plugin, 'LICENSE')],
   [join(kit, 'skill/SKILL.md'), join(plugin, 'skills/aindf-screen-author/SKILL.md')],
   [join(repo, 'examples/demo-ds/aindf-demo.bundle.json'), join(plugin, 'demo/aindf-demo.bundle.json')],
+  [join(repo, 'brand-assets/favicon/aindf-favicon-1024.png'), join(plugin, '.claude-plugin/icon.png')],
 ];
 const sha = b => createHash('sha256').update(b).digest('hex');
 const sums = copies.map(([, to]) => `${sha(readFileSync(existsSync(to) ? to : '/dev/null'))}  ${relative(plugin, to)}`);
