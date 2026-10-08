@@ -27,6 +27,10 @@ test('npm pack ships the runtime, schemas, skill and docs — no tests, scripts 
   assert.ok(expected.includes('src/cli.mjs'), 'the bin is shipped');
 });
 
+test('package.json needs no `npm pkg fix`: bin paths are written the way npm normalizes them', () => {
+  for (const [name, path] of Object.entries(pkg.bin)) assert.ok(!path.startsWith('./'), `bin ${name} is ${path}; npm removes the leading ./ when publishing`);
+});
+
 test('LICENSE in the package is the repository LICENSE', () => {
   assert.equal(readFileSync(`${dir}LICENSE`, 'utf8'), readFileSync(`${dir}../../LICENSE`, 'utf8'));
 });
