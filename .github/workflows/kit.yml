@@ -1,10 +1,10 @@
 name: kit
 on:
   pull_request:
-    paths: ['packages/aindf-kit/**', 'examples/**', 'plugin/**', 'remote-demo/**', '.github/workflows/kit.yml']
+    paths: ['packages/aindf-kit/**', 'examples/**', 'plugin/**', '.claude-plugin/**', 'remote-demo/**', '.github/workflows/kit.yml']
   push:
     branches: [main]
-    paths: ['packages/aindf-kit/**', 'examples/**', 'plugin/**', 'remote-demo/**', '.github/workflows/kit.yml']
+    paths: ['packages/aindf-kit/**', 'examples/**', 'plugin/**', '.claude-plugin/**', 'remote-demo/**', '.github/workflows/kit.yml']
 permissions:
   contents: read
 jobs:
@@ -88,6 +88,6 @@ jobs:
         with:
           node-version: 22
       - run: node plugin/scripts/check.mjs
-      - run: npx --yes "@anthropic-ai/claude-code@$CLAUDE_CODE_VERSION" --version && npx --yes "@anthropic-ai/claude-code@$CLAUDE_CODE_VERSION" plugin validate --strict plugin
+      - run: npx --yes "@anthropic-ai/claude-code@$CLAUDE_CODE_VERSION" --version && npx --yes "@anthropic-ai/claude-code@$CLAUDE_CODE_VERSION" plugin validate --strict plugin && npx --yes "@anthropic-ai/claude-code@$CLAUDE_CODE_VERSION" plugin validate --strict .
         env:
           CLAUDE_CODE_VERSION: 2.1.292 # pinned; raise on purpose
