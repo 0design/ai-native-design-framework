@@ -44,6 +44,7 @@ jobs:
           sha=$(sha256sum "$RUNNER_TEMP/$file" | cut -d' ' -f1)
           echo "sha256=$sha" >> "$GITHUB_OUTPUT"
           echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tarball $file sha256 $sha"
           {
             echo "### $file"
             echo
