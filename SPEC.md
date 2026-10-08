@@ -214,7 +214,7 @@ A screen refers to a binding by name only. The kind is checked only where a scre
 
 ### 7.3 ScreenSpec (`screen`)
 
-A ScreenSpec is a JSON document with a `route`, one `template` node and ordered `sections`. Each node names a component, sets declared props and fills declared slots with further nodes. It is **pinned** to one design-system version by `ds.id`, `ds.version` and `ds.bundleSha256` (§7.4). It contains no markup, styles, code or undeclared fields.
+A ScreenSpec is a JSON document with a `route`, one `template` node and ordered `sections`, and optionally an `id`, `meta` (the page title and description, as literal text or a `data` binding) and `params` (the binding that supplies the parameters of a `[param]` route, §7.2). Each node names a component, sets declared props and fills declared slots with further nodes. It is **pinned** to one design-system version by `ds.id`, `ds.version` and `ds.bundleSha256` (§7.4). It contains no markup, styles, code or undeclared fields.
 
 ### 7.4 Bundle and pin
 
@@ -291,7 +291,7 @@ For 0.2, `aindf check` runs this check; it accepts only `conformsTo: "aindf@0.2"
 
 ## 10. Boundary
 
-AINDF contains schemas, the checks, an MCP protocol and generators, and nothing else. It carries no palette, no fixed modifier set and no component library. Conformance test: *could a completely different design system, with its own tokens, components and modifier vocabulary, be built using only AINDF?* If yes, the boundary is clean.
+AINDF contains schemas, the checks, an MCP server and a builder, and nothing else. It carries no palette, no fixed modifier set and no component library. Conformance test: *could a completely different design system, with its own tokens, components and modifier vocabulary, be built using only AINDF?* If yes, the boundary is clean.
 
 ## 11. Versioning
 
