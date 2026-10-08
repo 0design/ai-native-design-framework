@@ -18,6 +18,14 @@ absolute path. Leave it empty to try the demo design system
 shipped with the plugin (`demo/aindf-demo.bundle.json`, described in
 [`examples/demo-ds`](https://github.com/0design/ai-native-design-framework/tree/main/examples/demo-ds)).
 
+## Examples
+
+Each prompt below works with the demo design system (leave **Design system bundle** empty). The same three run in CI through the same server code.
+
+1. **"Build a start page from this design system: a hero with a sign-up button, three benefits and a contact form."** The agent reads the design system with `get-ds`, writes a screen from `Hero`, `FeatureList` and `ContactForm`, and `validate-screen` accepts it.
+2. **"Make the headline violet and bigger."** `Heading` has only `text`, so `validate-screen` refuses `color` and `size` with `UNKNOWN_PROP`. The agent does not style the headline by hand; it tells you the design system lacks them.
+3. **"What can I use for a contact form?"** `list-by-facet` with role `form` returns `ContactForm` and `Field`, and `slot-accepts` shows that the form's `fields` slot takes `Field`.
+
 ## What the server offers
 
 Seven read-only tools: `get-ds`, `list-by-facet`, `get-component`, `slot-accepts`, `applicable-modifiers`,
