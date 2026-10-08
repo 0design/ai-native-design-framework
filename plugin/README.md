@@ -53,8 +53,8 @@ The server runs on your machine over stdio, so the plugin works in Claude Code a
 
 - `server/kit/`, `skills/aindf-screen-author/SKILL.md`, `demo/aindf-demo.bundle.json` and `LICENSE` are **copies**
   from this repository (`packages/aindf-kit`, `examples/demo-ds`). Change the source, then run
-  `node plugin/scripts/sync.mjs`.
-- `node plugin/scripts/check.mjs` checks the copies, the manifest, the MCP entry and the server with each kind of
+  `node scripts/plugin/sync.mjs`.
+- `node scripts/plugin/check.mjs` checks the copies, the manifest, the MCP entry and the server with each kind of
   `bundlePath`. CI runs it, plus `claude plugin validate --strict plugin`.
 
 ## License

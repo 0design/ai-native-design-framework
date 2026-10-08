@@ -7,12 +7,12 @@ import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import assert from 'node:assert/strict';
 
-const plugin = fileURLToPath(new URL('..', import.meta.url));
+const plugin = fileURLToPath(new URL('../../plugin/', import.meta.url));
 const repo = join(plugin, '..');
 const json = p => JSON.parse(readFileSync(join(plugin, p), 'utf8'));
 let step = 'copies';
 const run = (arg, requests) => new Promise((resolve, reject) => {
-  const child = spawn(join(plugin, 'server/launch.sh'), [arg], { cwd: repo }); // the file the .mcp.json command names
+  const child = spawn(join(plugin, 'server/launch.sh'), [arg], { cwd: repo, env: { ...process.env, CLAUDE_PLUGIN_ROOT: plugin.replace(/\/$/, '') } }); // the file the .mcp.json command names
   let out = '', err = '';
   child.stdout.on('data', d => { out += d; }); child.stderr.on('data', d => { err += d; }); child.on('error', reject);
   child.on('close', code => resolve({ code, err, replies: Object.fromEntries(out.trim().split('\n').filter(Boolean).map(l => JSON.parse(l)).map(r => [r.id, r])) }));
@@ -21,7 +21,7 @@ const run = (arg, requests) => new Promise((resolve, reject) => {
 const session = [{ method: 'initialize', params: { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'plugin-check', version: '0' } } }, { method: 'tools/list' }, { method: 'tools/call', params: { name: 'get-ds', arguments: {} } }];
 
 try {
-  execFileSync(process.execPath, [join(plugin, 'scripts/sync.mjs'), '--check'], { stdio: 'inherit' });
+  execFileSync(process.execPath, [join(repo, 'scripts/plugin/sync.mjs'), '--check'], { stdio: 'inherit' });
 
   step = 'marketplace';
   const market = JSON.parse(readFileSync(join(repo, '.claude-plugin/marketplace.json'), 'utf8'));
