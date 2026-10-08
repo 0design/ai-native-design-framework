@@ -1,10 +1,10 @@
 name: kit
 on:
   pull_request:
-    paths: ['packages/aindf-kit/**', 'examples/**', 'plugin/**', 'scripts/plugin/**', '.claude-plugin/**', 'remote-demo/**', '.github/workflows/kit.yml']
+    paths: ['packages/aindf-kit/**', 'examples/**', 'plugin/**', 'scripts/plugin/**', 'brand-assets/**', '.claude-plugin/**', 'remote-demo/**', '.github/workflows/kit.yml']
   push:
     branches: [main]
-    paths: ['packages/aindf-kit/**', 'examples/**', 'plugin/**', 'scripts/plugin/**', '.claude-plugin/**', 'remote-demo/**', '.github/workflows/kit.yml']
+    paths: ['packages/aindf-kit/**', 'examples/**', 'plugin/**', 'scripts/plugin/**', 'brand-assets/**', '.claude-plugin/**', 'remote-demo/**', '.github/workflows/kit.yml']
 permissions:
   contents: read
 jobs:
