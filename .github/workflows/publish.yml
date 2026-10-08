@@ -1,0 +1,109 @@
+name: publish
+# Publishes @ai-native-design-framework/kit to npm, with provenance. Manual only: it needs a release tag, the sha256 of the
+# tarball that was reviewed, and the GitHub Environment `npm-publish` (required reviewer, secret NPM_TOKEN).
+# On pull requests it only packs the kit and reports what would be published (the file list and the tarball sha256).
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to publish, for example v0.2.1
+        required: true
+      tarball_sha256:
+        description: sha256 of the tarball that was reviewed (printed by the pack job on the pull request)
+        required: true
+  pull_request:
+    paths: ['packages/aindf-kit/**', '.github/workflows/publish.yml', 'scripts/public-text-check.mjs']
+permissions:
+  contents: read
+env:
+  NPM_VERSION: 10.9.2 # pinned, so the same files give the same tarball
+jobs:
+  pack:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      sha256: ${{ steps.pack.outputs.sha256 }}
+      version: ${{ steps.pack.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && format('refs/tags/{0}', inputs.tag) || '' }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --global npm@${{ env.NPM_VERSION }}
+      - name: Pack
+        id: pack
+        working-directory: packages/aindf-kit
+        run: |
+          npm pack --json --pack-destination "$RUNNER_TEMP" > "$RUNNER_TEMP/pack.json"
+          file=$(node -p "require('$RUNNER_TEMP/pack.json')[0].filename")
+          version=$(node -p "require('./package.json').version")
+          sha=$(sha256sum "$RUNNER_TEMP/$file" | cut -d' ' -f1)
+          echo "sha256=$sha" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          {
+            echo "### $file"
+            echo
+            echo "sha256: \`$sha\`"
+            echo
+            echo "Files:"
+            node -p "require('$RUNNER_TEMP/pack.json')[0].files.map(f => '- ' + f.path).join('\n')"
+          } >> "$GITHUB_STEP_SUMMARY"
+          mkdir "$RUNNER_TEMP/unpacked" && tar -xzf "$RUNNER_TEMP/$file" -C "$RUNNER_TEMP/unpacked"
+          cp "$RUNNER_TEMP/$file" "$RUNNER_TEMP/kit.tgz"
+      - name: The package is public and its files are what the repository says
+        working-directory: packages/aindf-kit
+        run: |
+          node -e "const p=require('./package.json'); if (p.private) { console.error('package.json is private'); process.exit(1) } if (p.name !== '@ai-native-design-framework/kit') process.exit(1)"
+          node --test test/package.test.mjs
+      - name: Text scan of the tarball contents
+        run: node scripts/public-text-check.mjs --dir "$RUNNER_TEMP/unpacked/package"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kit-tarball
+          path: ${{ runner.temp }}/kit.tgz
+          retention-days: 7
+  publish:
+    if: github.event_name == 'workflow_dispatch'
+    needs: pack
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: npm-publish
+    permissions:
+      contents: read
+      id-token: write # provenance
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      - run: npm install --global npm@${{ env.NPM_VERSION }}
+      - name: The tag, the version and the reviewed tarball agree
+        env:
+          TAG: ${{ inputs.tag }}
+          EXPECTED_SHA: ${{ inputs.tarball_sha256 }}
+          PACKED_SHA: ${{ needs.pack.outputs.sha256 }}
+          PACKED_VERSION: ${{ needs.pack.outputs.version }}
+        run: |
+          [ "$TAG" = "v$PACKED_VERSION" ] || { echo "tag $TAG does not match package version $PACKED_VERSION"; exit 1; }
+          [ "$(git cat-file -t "refs/tags/$TAG")" = tag ] || { echo "$TAG is not an annotated tag"; exit 1; }
+          git fetch --quiet origin main
+          git merge-base --is-ancestor "$(git rev-list -n1 "refs/tags/$TAG")" origin/main || { echo "$TAG is not on main"; exit 1; }
+          [ "$PACKED_SHA" = "$EXPECTED_SHA" ] || { echo "tarball sha256 $PACKED_SHA is not the reviewed $EXPECTED_SHA"; exit 1; }
+          # what is about to be published, packed again here, is the reviewed tarball
+          (cd packages/aindf-kit && npm pack --pack-destination "$RUNNER_TEMP" >/dev/null)
+          again=$(sha256sum "$RUNNER_TEMP"/ai-native-design-framework-kit-*.tgz | cut -d' ' -f1)
+          [ "$again" = "$EXPECTED_SHA" ] || { echo "re-packed sha256 $again is not the reviewed $EXPECTED_SHA"; exit 1; }
+      - name: Publish with provenance
+        working-directory: packages/aindf-kit
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --provenance --access public
