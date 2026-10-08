@@ -1,4 +1,4 @@
-// npm readiness: the package is ready to publish but stays private until the v2 release.
+// npm readiness: the package can be published and is published only from CI, with provenance.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
@@ -10,8 +10,9 @@ const dir = fileURLToPath(new URL('..', import.meta.url));
 const pkg = JSON.parse(readFileSync(`${dir}package.json`, 'utf8'));
 const server = JSON.parse(readFileSync(`${dir}server.json`, 'utf8'));
 
-test('the package stays private until the v2 release', () => {
-  assert.equal(pkg.private, true);
+test('the package is public: not marked private, scoped to the organization, 0.2.1 or later', () => {
+  assert.equal(pkg.private, undefined);
+  assert.match(pkg.version, /^0\.2\.([1-9]\d*)$|^0\.([3-9]|\d{2,})\.\d+$/);
   // the npm organization; the MCP Registry name is a separate namespace
   assert.equal(pkg.name, '@ai-native-design-framework/kit');
 });
@@ -32,7 +33,7 @@ test('LICENSE in the package is the repository LICENSE', () => {
 
 test('MCP Registry: server.json names this package, its version and mcpName; the run is `aindf mcp <bundle>` over stdio', () => {
   assert.equal(server.name, pkg.mcpName);
-  assert.equal(server.name, 'design.oleg/aindf');
+  assert.equal(server.name, 'io.github.0design/aindf', 'the GitHub OIDC login of the registry grants io.github.<repository owner>/*');
   const ci = readFileSync(`${dir}../../.github/workflows/kit.yml`, 'utf8');
   const pinned = /SCHEMA_URL: (\S+)/.exec(ci)?.[1];
   assert.ok(pinned, 'kit.yml pins SCHEMA_URL');

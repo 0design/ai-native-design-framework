@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1
+
+The kit package is no longer marked private, so it can be published to npm as `@ai-native-design-framework/kit`. No change to what the kit does.
+
 ## 0.2.0
 
 Screens from contracts: your agent writes a screen as a config, and a check refuses anything your design system does

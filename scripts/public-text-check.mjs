@@ -2,10 +2,12 @@
 // Public-text check: this repository is public, so its text must describe the code and nothing about how the work is
 // organized. Refuses internal process wording with file:line (or PR field / commit).
 //   node scripts/public-text-check.mjs --tree                    scan every tracked file (push to main)
+//   node scripts/public-text-check.mjs --dir <path>              scan every file under a directory (e.g. an unpacked npm tarball)
 //   node scripts/public-text-check.mjs --pr <base> <head>        PR title and body (from the event file or env), added
 //                                                                diff lines and commit messages in base..head
 import { execFileSync } from 'node:child_process';
-import { readFileSync, realpathSync } from 'node:fs';
+import { readFileSync, readdirSync, realpathSync } from 'node:fs';
+import { join, relative } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 export const PATTERNS = [
@@ -44,6 +46,15 @@ const git = (...a) => execFileSync('git', ['-c', 'core.quotepath=false', ...a], 
 const found = [];
 const report = (where, vs) => { for (const v of vs) found.push(`${where}${v.line ? `:${v.line}` : ''}  ${v.why}: "${v.match}"`); };
 
+export function scanDir(dir) {
+  const walk = d => readdirSync(d, { withFileTypes: true }).flatMap(e => e.isDirectory() ? walk(join(d, e.name)) : [join(d, e.name)]);
+  for (const f of walk(dir)) {
+    let text; try { text = readFileSync(f, 'utf8'); } catch { continue; }
+    if (text.includes('\0')) continue;
+    report(relative(dir, f), violations(text));
+  }
+}
+
 export function scanTree() {
   for (const f of git('ls-files', '-z').split('\0').filter(Boolean)) {
     if (SKIP_PATHS.some(re => re.test(f))) continue;
@@ -73,8 +84,8 @@ export function scanPr(base, head) {
 
 if (import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   const [mode, base, head] = process.argv.slice(2);
-  if (mode === '--tree') scanTree(); else if (mode === '--pr' && base && head) scanPr(base, head);
-  else { console.error('usage: public-text-check.mjs --tree | --pr <base> <head>'); process.exit(2); }
+  if (mode === '--tree') scanTree(); else if (mode === '--dir' && base) scanDir(base); else if (mode === '--pr' && base && head) scanPr(base, head);
+  else { console.error('usage: public-text-check.mjs --tree | --dir <path> | --pr <base> <head>'); process.exit(2); }
   if (found.length) { console.error(`public-text-check: ${found.length} hit(s)\n${found.join('\n')}`); process.exit(1); }
   console.log('public-text-check: PASS');
 }
