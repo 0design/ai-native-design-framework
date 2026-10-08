@@ -5,7 +5,7 @@
 //   node scripts/public-text-check.mjs --pr <base> <head>        PR title and body (from the event file or env), added
 //                                                                diff lines and commit messages in base..head
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { readFileSync, realpathSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
 export const PATTERNS = [
@@ -71,7 +71,7 @@ export function scanPr(base, head) {
   }
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   const [mode, base, head] = process.argv.slice(2);
   if (mode === '--tree') scanTree(); else if (mode === '--pr' && base && head) scanPr(base, head);
   else { console.error('usage: public-text-check.mjs --tree | --pr <base> <head>'); process.exit(2); }
