@@ -71,3 +71,14 @@ test('PR mode: title and description come from the event file, as in CI', () => 
   writeFileSync(ev, JSON.stringify({ pull_request: { title: 'Reword', body: 'Docs only.' } }));
   assert.equal(run({ GITHUB_EVENT_PATH: ev }, '--pr', 'main', 'b').status, 0);
 });
+
+test('a line that starts with "++ " is still scanned, line numbers survive an allowed owner key, look-alikes are folded', () => {
+  assert.equal(violations('ok\n\nowner: team-a\n' + 'owner ' + 'decided\n')[0].line, 4);
+  assert.equal(violations('owner\u200b ' + 'decided the tokens').length, 1);
+  assert.equal(violations('ask ' + 'oleg about it').length, 1);
+  assert.deepEqual(violations('see https://oleg.design and design.oleg/aindf'), []);
+  const { d, g, run } = repo();
+  g('checkout', '-qb', 'b'); writeFileSync(join(d, 'a.md'), 'fine\n++ ' + 'owner ' + 'decided the tokens\n'); g('commit', '-qam', 'Add a line');
+  const r = run({ PR_TITLE: 'Add', PR_BODY: 'Docs.' }, '--pr', 'main', 'b');
+  assert.equal(r.status, 1, r.stderr); assert.match(r.stderr, /a\.md:2/);
+});

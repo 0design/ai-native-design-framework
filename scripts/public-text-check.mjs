@@ -11,7 +11,7 @@ export const PATTERNS = [
   [/\bowner(?:'s|’s)?\s+(?:ok|okay|decision|decided|approved?|approval|approves|sign-?off|confirm\w*|said|yes)\b|\bdecision of the owner\b|\b(?:needs?|waits? for|after)\s+the\s+owner(?:'s|’s)?\b|\bset by the owner\b|\bchosen by the owner\b/i, 'owner decision / approval'],
   [/\bapproved by\b/i, 'approval wording'],
   [/Рішення\s+Олега|Олег/u, 'name or decision of a person (Cyrillic)'],
-  [/\bOleg\b/, 'a person\'s name'],
+  [/\bOleg\b/i, 'a person\'s name'],
   [/(?<![\p{L}\p{N}])(?:квіз|quiz)\s*#?\s*\d+/iu, 'quiz number'],
   [/\b0D-\d+/, 'internal issue id'],
   [/linear\.app/i, 'internal tracker link'],
@@ -24,12 +24,13 @@ export const PATTERNS = [
   [/\b(?:do\s+not|don['’]t)\s+merge\b|(?<![\p{L}])не\s+мерж/iu, 'merge instruction'],
 ];
 // Text that is legitimate although it looks close: the author and brand, the license line, a yaml `owner:` key.
-export const ALLOW = [/\bDS owner\b/g, /Oleg\.Design/g, /design\.oleg/g, /Copyright \(c\) \d{4} Oleg Kukharuk/g, /^\s*owner:/gm];
+export const ALLOW = [/\bDS owner\b/g, /Oleg\.Design/g, /design\.oleg/g, /Copyright \(c\) \d{4} Oleg Kukharuk/g, /^[ \t]*owner:/gm, /oleg\.design/gi];
 // This tool names the patterns, so it and its tests are not scanned.
 export const SKIP_PATHS = [/^scripts\/public-text-check\.mjs$/, /^scripts\/test\/public-text-check\.test\.mjs$/];
 
 export function violations(text) {
-  let clean = text;
+  // fold look-alike and invisible characters first, so "owner\u200b decision" cannot slip through
+  let clean = text.normalize('NFKC').replace(/\p{Cf}/gu, '');
   for (const a of ALLOW) clean = clean.replace(a, m => ' '.repeat(m.length));
   const out = [];
   clean.split('\n').forEach((line, i) => {
@@ -60,11 +61,12 @@ export function scanPr(base, head) {
     const [sha, msg] = c.split('\0');
     report(`commit ${sha.slice(0, 8)}`, violations(msg ?? ''));
   }
-  let file = null, n = 0;
+  let file = null, n = 0, inHunk = false;
   for (const l of git('diff', '--unified=0', '--no-color', `${base}...${head}`).split('\n')) {
-    if (l.startsWith('+++ ')) { file = l.slice(6) === '/dev/null' ? null : l.slice(6); continue; }
-    const h = l.match(/^@@ -\S+ \+(\d+)/); if (h) { n = Number(h[1]); continue; }
-    if (l.startsWith('+') && file && !SKIP_PATHS.some(re => re.test(file))) { for (const v of violations(l.slice(1))) report(file, [{ ...v, line: n }]); n++; }
+    if (l.startsWith('diff --git ')) { inHunk = false; file = null; continue; }
+    if (!inHunk && l.startsWith('+++ ')) { file = l === '+++ /dev/null' ? null : l.slice(6); continue; }
+    const h = l.match(/^@@ -\S+ \+(\d+)/); if (h) { n = Number(h[1]); inHunk = true; continue; }
+    if (inHunk && l.startsWith('+') && file && !SKIP_PATHS.some(re => re.test(file))) { for (const v of violations(l.slice(1))) report(file, [{ ...v, line: n }]); n++; }
   }
 }
 
