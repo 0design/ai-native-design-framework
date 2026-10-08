@@ -1,0 +1,60 @@
+name: mirror-plugin
+# Publishes plugin/ as the root of the repository 0design/aindf-plugin, for plugin directories that expect the plugin
+# at the root of a repository. The mirror is generated: every push to main that changes plugin/ replaces its content.
+# Needs a write deploy key of the mirror repository in the secret AINDF_PLUGIN_DEPLOY_KEY (Environment `plugin-mirror`).
+on:
+  push:
+    branches: [main]
+    paths: ['plugin/**', '.github/workflows/mirror-plugin.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: mirror-plugin
+  cancel-in-progress: false
+jobs:
+  mirror:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: plugin-mirror
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: The plugin is in sync and passes its own check
+        run: node plugin/scripts/check.mjs
+      - name: Text scan of what will be published
+        run: node scripts/public-text-check.mjs --dir plugin
+      - uses: actions/checkout@v4
+        with:
+          repository: 0design/aindf-plugin
+          path: mirror
+          ssh-key: ${{ secrets.AINDF_PLUGIN_DEPLOY_KEY }}
+          fetch-depth: 1
+      - name: Replace the mirror content with plugin/
+        run: |
+          find mirror -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -R plugin/. mirror/
+          # the mirror has no monorepo around it, so the monorepo-only check script stays out
+          rm -rf mirror/scripts
+          find mirror -type l | grep . && { echo "symbolic link in the mirror"; exit 1; } || true
+      - name: The mirror root is a valid plugin that starts
+        run: |
+          npx --yes "@anthropic-ai/claude-code@$CLAUDE_CODE_VERSION" plugin validate --strict mirror
+          printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"mirror-check","version":"0"}}}' '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' | node mirror/server/launch.mjs | node -e "const l=require('fs').readFileSync(0,'utf8').trim().split('\n').map(JSON.parse); const t=l.find(r=>r.id===2).result.tools; if (t.length !== 7) { console.error('expected 7 tools, got ' + t.length); process.exit(1) }"
+        env:
+          CLAUDE_CODE_VERSION: 2.1.292 # pinned, as in kit.yml
+      - name: Commit and push
+        working-directory: mirror
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          git add -A
+          git diff --cached --quiet && { echo "mirror already matches $SOURCE_SHA"; exit 0; }
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -q -m "Mirror of plugin/ at ai-native-design-framework@$SOURCE_SHA"
+          git push origin HEAD:main
