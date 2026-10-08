@@ -1,4 +1,4 @@
-# @ai-native-design-framework/kit — AINDF v2 pilot kit
+# @ai-native-design-framework/kit — the AINDF 0.2 kit
 
 One dependency-free package for any design system that conforms to AINDF (`conformsTo: "aindf@0.2"`):
 
@@ -26,7 +26,7 @@ packs this package, installs the tarball into an empty project and uses it only 
 (check, bundle, build, `--check`), the package exports and the MCP over stdio — each step with a negative. CI runs it on
 Node 20 and 22 and prints the tarball sha256 and kit version it checked.
 
-## Instance on Core (`ds.core` + `ds.coreBundle` + `ds.coreBundleSha256`, 0.2.0-pilot.7)
+## Instance on Core (`ds.core` + `ds.coreBundle` + `ds.coreBundleSha256`, 0.2.0)
 
 An Instance that extends a Core pins it in `aindf.config.json` three ways: `ds.core` (`id@version`), `ds.coreBundle`
 (path to that Core's AINDF bundle) and `ds.coreBundleSha256` (the bundle's content hash; a self-consistent bundle with the
