@@ -1,6 +1,6 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "design.oleg/aindf",
+  "name": "io.github.0design/aindf",
   "title": "AINDF",
   "description": "Read-only MCP server for one AINDF design-system bundle: look up what it offers, validate screens.",
   "repository": {
