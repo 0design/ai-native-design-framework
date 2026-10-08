@@ -25,8 +25,9 @@ try {
 
   step = 'marketplace';
   const market = JSON.parse(readFileSync(join(repo, '.claude-plugin/marketplace.json'), 'utf8'));
-  assert.equal(market.name, 'aindf');
+  assert.equal(market.name, 'aindf', 'marketplace name');
   assert.deepEqual(market.plugins.map(p => [p.name, p.source]), [['aindf', './plugin']], 'the marketplace lists this plugin by its folder');
+  assert.equal(JSON.parse(readFileSync(join(repo, market.plugins[0].source, '.claude-plugin/plugin.json'), 'utf8')).name, market.plugins[0].name, 'the listed folder holds the listed plugin');
 
   step = 'manifest';
   const manifest = json('.claude-plugin/plugin.json');
