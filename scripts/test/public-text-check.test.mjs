@@ -95,3 +95,9 @@ test('the script runs from a path with a space', () => {
   const r = spawnSync(process.execPath, [copy, '--tree'], { cwd: d, encoding: 'utf8' });
   assert.match(r.stdout, /PASS/);
 });
+
+test('typographic dashes are folded, lower-case issue ids are caught, and "колега" is not a name', () => {
+  for (const b of ['0D' + '\u2011380', '0D' + '\u2013380', '0D' + '\u2212380', '0d' + '-380', 'owner sign' + '\u2011off']) assert.equal(violations(b).length > 0, true, b);
+  assert.deepEqual(violations('наш колега і колегам'), []);
+  assert.equal(violations('Олег ' + 'каже').length, 1);
+});

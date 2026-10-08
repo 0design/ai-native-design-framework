@@ -11,10 +11,10 @@ import { pathToFileURL } from 'node:url';
 export const PATTERNS = [
   [/\bowner(?:'s|’s)?\s+(?:ok|okay|decision|decided|approved?|approval|approves|sign-?off|confirm\w*|said|yes)\b|\bdecision of the owner\b|\b(?:needs?|waits? for|after)\s+the\s+owner(?:'s|’s)?\b|\bset by the owner\b|\bchosen by the owner\b/i, 'owner decision / approval'],
   [/\bapproved by\b/i, 'approval wording'],
-  [/Рішення\s+Олега|Олег/iu, 'name or decision of a person (Cyrillic)'],
+  [/Рішення\s+Олега|(?<!\p{L})Олег/iu, 'name or decision of a person (Cyrillic)'],
   [/\bOleg\b/i, 'a person\'s name'],
   [/(?<![\p{L}\p{N}])(?:квіз|quiz)\s*(?:#|№|no\.?)?\s*\d+/iu, 'quiz number'],
-  [/\b0D-\d+/, 'internal issue id'],
+  [/\b0D-\d+/i, 'internal issue id'],
   [/linear\.app/i, 'internal tracker link'],
   [/\bplan\s+steps?\b|\bplugin\s+plan\b/i, 'plan step'],
   [/\breview\s+rounds?\b/i, 'review round'],
@@ -31,7 +31,7 @@ export const SKIP_PATHS = [/^scripts\/public-text-check\.mjs$/, /^scripts\/test\
 
 export function violations(text) {
   // fold look-alike and invisible characters first, so "owner\u200b decision" cannot slip through
-  let clean = text.normalize('NFKC').replace(/\p{Cf}/gu, '');
+  let clean = text.normalize('NFKC').replace(/\p{Cf}/gu, '').replace(/[\u2010-\u2015\u2212]/g, '-');
   for (const a of ALLOW) clean = clean.replace(a, m => ' '.repeat(m.length));
   const out = [];
   clean.split('\n').forEach((line, i) => {
