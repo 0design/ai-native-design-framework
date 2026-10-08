@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdtempSync, writeFileSync, mkdirSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -81,4 +81,17 @@ test('a line that starts with "++ " is still scanned, line numbers survive an al
   g('checkout', '-qb', 'b'); writeFileSync(join(d, 'a.md'), 'fine\n++ ' + 'owner ' + 'decided the tokens\n'); g('commit', '-qam', 'Add a line');
   const r = run({ PR_TITLE: 'Add', PR_BODY: 'Docs.' }, '--pr', 'main', 'b');
   assert.equal(r.status, 1, r.stderr); assert.match(r.stderr, /a\.md:2/);
+});
+
+test('quiz with a numero sign or "No", and Cyrillic names in any case, are caught', () => {
+  for (const b of ['Квіз ' + '№3', 'Квіз ' + 'No 3', 'quiz ' + 'no. 4', 'олег', 'ОЛЕГ', 'рішення ' + 'олега']) assert.equal(violations(b).length > 0, true, b);
+  assert.deepEqual(violations('quiz notes 3'), []);
+});
+
+test('the script runs from a path with a space', () => {
+  const d = mkdtempSync(join(tmpdir(), 'ptc sp '));
+  const copy = join(d, 'check.mjs'); writeFileSync(copy, readFileSync(script));
+  execFileSync('git', ['init', '-q', d]);
+  const r = spawnSync(process.execPath, [copy, '--tree'], { cwd: d, encoding: 'utf8' });
+  assert.match(r.stdout, /PASS/);
 });

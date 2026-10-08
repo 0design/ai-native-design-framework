@@ -6,13 +6,14 @@
 //                                                                diff lines and commit messages in base..head
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 
 export const PATTERNS = [
   [/\bowner(?:'s|’s)?\s+(?:ok|okay|decision|decided|approved?|approval|approves|sign-?off|confirm\w*|said|yes)\b|\bdecision of the owner\b|\b(?:needs?|waits? for|after)\s+the\s+owner(?:'s|’s)?\b|\bset by the owner\b|\bchosen by the owner\b/i, 'owner decision / approval'],
   [/\bapproved by\b/i, 'approval wording'],
-  [/Рішення\s+Олега|Олег/u, 'name or decision of a person (Cyrillic)'],
+  [/Рішення\s+Олега|Олег/iu, 'name or decision of a person (Cyrillic)'],
   [/\bOleg\b/i, 'a person\'s name'],
-  [/(?<![\p{L}\p{N}])(?:квіз|quiz)\s*#?\s*\d+/iu, 'quiz number'],
+  [/(?<![\p{L}\p{N}])(?:квіз|quiz)\s*(?:#|№|no\.?)?\s*\d+/iu, 'quiz number'],
   [/\b0D-\d+/, 'internal issue id'],
   [/linear\.app/i, 'internal tracker link'],
   [/\bplan\s+steps?\b|\bplugin\s+plan\b/i, 'plan step'],
@@ -39,7 +40,7 @@ export function violations(text) {
   return out;
 }
 
-const git = (...a) => execFileSync('git', a, { encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
+const git = (...a) => execFileSync('git', ['-c', 'core.quotepath=false', ...a], { encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
 const found = [];
 const report = (where, vs) => { for (const v of vs) found.push(`${where}${v.line ? `:${v.line}` : ''}  ${v.why}: "${v.match}"`); };
 
@@ -70,7 +71,7 @@ export function scanPr(base, head) {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const [mode, base, head] = process.argv.slice(2);
   if (mode === '--tree') scanTree(); else if (mode === '--pr' && base && head) scanPr(base, head);
   else { console.error('usage: public-text-check.mjs --tree | --pr <base> <head>'); process.exit(2); }
