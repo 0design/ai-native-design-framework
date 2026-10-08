@@ -29,10 +29,10 @@ try {
   assert.equal(manifest.version, json('server/kit/package.json').version, 'plugin version = kit version');
   assert.equal(manifest.license, 'MIT');
   // what a directory listing reads from the manifest and the README
-  for (const key of ['documentationUrl', 'supportUrl']) assert.match(manifest[key] ?? '', /^https:\/\/\S+$/, `manifest.${key} is an https URL`);
+  for (const key of ['documentationUrl', 'supportUrl']) assert.match(manifest[key] ?? '', /^https:\/\/github\.com\/0design\/ai-native-design-framework[\/#?]\S*$/, `manifest.${key} is an https URL`);
   const readme = readFileSync(join(plugin, 'README.md'), 'utf8');
   assert.ok(readme.replace(/```[\s\S]*?```/g, '').split(/\s+/).filter(Boolean).length >= 40, 'README has at least 40 words outside code blocks');
-  const examples = /## Examples\n([\s\S]*?)\n## /.exec(readme)?.[1] ?? '';
+  const examples = /## Examples\n([\s\S]*?)(?:\n## |$)/.exec(readme)?.[1] ?? '';
   assert.ok((examples.match(/^\d+\. /gm) ?? []).length >= 3, 'README lists at least three usage examples');
   assert.equal(manifest.userConfig.bundlePath.sensitive, undefined, 'a bundle path is not a secret');
   assert.match(readFileSync(join(plugin, 'skills/aindf-screen-author/SKILL.md'), 'utf8'), /^---\nname: aindf-screen-author\n/);
