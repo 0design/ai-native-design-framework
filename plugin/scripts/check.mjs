@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Checks the plugin as Claude Code would start it: the manifest, the MCP entry (one file, no shell, no npm), the
+// Checks the plugin as Claude Code would start it: the manifest, the MCP entry (a plain shell script, no npm), the
 // copies (sync --check), and the server itself over stdio with each kind of `bundlePath`. Exits 1 and names the step.
 import { readFileSync, statSync } from 'node:fs';
 import { spawn, execFileSync } from 'node:child_process';

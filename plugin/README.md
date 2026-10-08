@@ -45,7 +45,9 @@ Your agent sees the server's answers like any other tool output.
 
 ## Requirements
 
-Node.js 20.10 or newer. Nothing to install: the plugin has no dependencies.
+Node.js 20.10 or newer and a POSIX shell (`sh`). Nothing to install: the plugin has no dependencies.
+
+The server runs on your machine over stdio, so the plugin works in Claude Code and Cowork. It does not run on claude.ai in the browser, which cannot start local servers.
 
 ## For maintainers
 
