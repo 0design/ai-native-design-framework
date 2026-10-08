@@ -1,6 +1,7 @@
 name: publish
-# Publishes @ai-native-design-framework/kit to npm, with provenance. Manual only: it needs a release tag, the sha256 of the
-# tarball that was reviewed, and the GitHub Environment `npm-publish` (required reviewer, secret NPM_TOKEN).
+# Publishes @ai-native-design-framework/kit to npm with provenance, then lists it in the MCP Registry. No secrets: npm
+# trusted publishing and the registry's GitHub login both use this workflow's OIDC token. Manual only: it needs a release
+# tag and the sha256 of the tarball that was reviewed, and runs in the GitHub Environment `npm-publish`.
 # On pull requests it only packs the kit and reports what would be published (the file list and the tarball sha256).
 on:
   workflow_dispatch:
@@ -16,7 +17,9 @@ on:
 permissions:
   contents: read
 env:
-  NPM_VERSION: 10.9.2 # pinned, so the same files give the same tarball
+  NPM_VERSION: 11.21.0 # pinned (trusted publishing needs npm 11.5.1 or newer); the same files give the same tarball
+  MCP_PUBLISHER_VERSION: v1.8.1
+  MCP_PUBLISHER_SHA256: a06c9096dcb9727c13555b6be26c7effa707b01f06a4c561ba7a3635443cf2cc # mcp-publisher_linux_amd64.tar.gz of that release
 jobs:
   pack:
     runs-on: ubuntu-latest
@@ -68,7 +71,8 @@ jobs:
           path: ${{ runner.temp }}/kit.tgz
           retention-days: 7
   publish:
-    if: github.event_name == 'workflow_dispatch'
+    # a run started from a branch other than main is refused here and by the Environment's branch rule
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
     needs: pack
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -103,8 +107,40 @@ jobs:
           (cd packages/aindf-kit && npm pack --pack-destination "$RUNNER_TEMP" >/dev/null)
           again=$(sha256sum "$RUNNER_TEMP"/ai-native-design-framework-kit-*.tgz | cut -d' ' -f1)
           [ "$again" = "$EXPECTED_SHA" ] || { echo "re-packed sha256 $again is not the reviewed $EXPECTED_SHA"; exit 1; }
-      - name: Publish with provenance
+      - name: Publish (npm trusted publishing with OIDC; provenance is added automatically)
         working-directory: packages/aindf-kit
+        run: npm publish --access public
+  registry:
+    # lists the published package in the MCP Registry; the registry's GitHub login grants io.github.<repository owner>/*
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    needs: [pack, publish]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: npm-publish
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+          persist-credentials: false
+      - name: Wait until npm serves the published version
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish --provenance --access public
+          VERSION: ${{ needs.pack.outputs.version }}
+        run: |
+          for i in $(seq 1 20); do
+            npm view "@ai-native-design-framework/kit@$VERSION" version >/dev/null 2>&1 && exit 0
+            sleep 10
+          done
+          echo "npm does not serve @ai-native-design-framework/kit@$VERSION yet"; exit 1
+      - name: Install mcp-publisher (pinned release, checked against its sha256)
+        run: |
+          curl -sfL "https://github.com/modelcontextprotocol/registry/releases/download/$MCP_PUBLISHER_VERSION/mcp-publisher_linux_amd64.tar.gz" -o "$RUNNER_TEMP/mcp-publisher.tar.gz"
+          echo "$MCP_PUBLISHER_SHA256  $RUNNER_TEMP/mcp-publisher.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/mcp-publisher.tar.gz" -C "$RUNNER_TEMP" mcp-publisher
+      - name: Publish to the MCP Registry
+        working-directory: packages/aindf-kit
+        run: |
+          "$RUNNER_TEMP/mcp-publisher" login github-oidc
+          "$RUNNER_TEMP/mcp-publisher" publish
