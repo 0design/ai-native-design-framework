@@ -2,6 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import worker from './worker.mjs';
+import { KIT_VERSION } from '../packages/aindf-kit/src/util.mjs';
 import demo from '../examples/demo-ds/aindf-demo.bundle.json' with { type: 'json' };
 
 const url = path => `https://aindf-demo-mcp.example.workers.dev${path}`;
@@ -16,7 +17,7 @@ test('GET /health names the served demo pin and kit, read-only', async () => {
   assert.equal(r.status, 200);
   const body = await r.json();
   assert.deepEqual({ ok: body.ok, ds: body.ds, readOnly: body.readOnly }, { ok: true, ds: pin, readOnly: true });
-  assert.match(body.kit, /^0\.2\.0/);
+  assert.equal(body.kit, KIT_VERSION);
 });
 
 test('POST /mcp: 7 read-only tools, the demo pin, a valid screen admitted', async () => {

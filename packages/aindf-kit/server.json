@@ -1,6 +1,6 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "design.oleg/aindf",
+  "name": "io.github.0design/aindf",
   "title": "AINDF",
   "description": "Read-only MCP server for one AINDF design-system bundle: look up what it offers, validate screens.",
   "repository": {
@@ -9,12 +9,12 @@
     "subfolder": "packages/aindf-kit"
   },
   "websiteUrl": "https://github.com/0design/ai-native-design-framework",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "@ai-native-design-framework/kit",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "transport": {
         "type": "stdio"
       },
