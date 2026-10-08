@@ -22,7 +22,7 @@
   ],
   "mcpName": "io.github.0design/aindf",
   "bin": {
-    "aindf": "./src/cli.mjs"
+    "aindf": "src/cli.mjs"
   },
   "exports": {
     ".": "./src/index.mjs",
