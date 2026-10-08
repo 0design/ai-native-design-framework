@@ -45,14 +45,16 @@ Your agent sees the server's answers like any other tool output.
 
 ## Requirements
 
-Node.js 20.10 or newer. Nothing to install: the plugin has no dependencies.
+Node.js 20.10 or newer and a POSIX shell (`sh`). Nothing to install: the plugin has no dependencies.
+
+The server runs on your machine over stdio, so the plugin works in Claude Code and Cowork. It does not run on claude.ai in the browser, which cannot start local servers.
 
 ## For maintainers
 
 - `server/kit/`, `skills/aindf-screen-author/SKILL.md`, `demo/aindf-demo.bundle.json` and `LICENSE` are **copies**
   from this repository (`packages/aindf-kit`, `examples/demo-ds`). Change the source, then run
-  `node plugin/scripts/sync.mjs`.
-- `node plugin/scripts/check.mjs` checks the copies, the manifest, the MCP entry and the server with each kind of
+  `node scripts/plugin/sync.mjs`.
+- `node scripts/plugin/check.mjs` checks the copies, the manifest, the MCP entry and the server with each kind of
   `bundlePath`. CI runs it, plus `claude plugin validate --strict plugin`.
 
 ## License

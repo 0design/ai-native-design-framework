@@ -10,7 +10,7 @@ import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { join, dirname, relative } from 'node:path';
 
-const plugin = fileURLToPath(new URL('..', import.meta.url));
+const plugin = fileURLToPath(new URL('../../plugin/', import.meta.url));
 const repo = join(plugin, '..');
 const kit = join(repo, 'packages/aindf-kit');
 const walk = dir => readdirSync(dir).flatMap(n => { const p = join(dir, n); return statSync(p).isDirectory() ? walk(p) : [p]; });
@@ -30,10 +30,10 @@ if (process.argv.includes('--check')) {
   const problems = [];
   for (const [from, to] of copies) {
     if (!existsSync(to)) problems.push(`missing ${relative(plugin, to)}`);
-    else if (!readFileSync(from).equals(readFileSync(to))) problems.push(`differs from source: ${relative(plugin, to)} (run node plugin/scripts/sync.mjs)`);
+    else if (!readFileSync(from).equals(readFileSync(to))) problems.push(`differs from source: ${relative(plugin, to)} (run node scripts/plugin/sync.mjs)`);
   }
   // every file in plugin/ is either a copy or one of the plugin's own files; anything else is refused
-  const own = ['.claude-plugin/plugin.json', '.mcp.json', 'README.md', 'COPIES.SHA256SUMS', 'scripts/sync.mjs', 'scripts/check.mjs', 'server/launch.mjs'].map(f => join(plugin, f));
+  const own = ['.claude-plugin/plugin.json', '.mcp.json', 'README.md', 'COPIES.SHA256SUMS', 'server/launch.mjs', 'server/launch.sh'].map(f => join(plugin, f));
   const extra = walk(plugin).filter(f => !copies.some(([, to]) => to === f) && !own.includes(f)).map(f => `not allowed in plugin/: ${relative(plugin, f)}`);
   problems.push(...extra);
   if (!existsSync(sumsPath) || readFileSync(sumsPath, 'utf8') !== sums.join('\n') + '\n') problems.push('COPIES.SHA256SUMS is stale');
