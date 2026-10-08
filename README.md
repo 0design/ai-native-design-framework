@@ -30,7 +30,7 @@
 
 Without AINDF your agent writes HTML and CSS itself and can ignore your design system. With AINDF the screen is a
 config, and the check passes only what your design system offers. Fix how a component looks or works in your design
-system once, and every screen built from it gets the fix on the next build.
+system once, and every screen built from it gets the fix on the next build, once the screens are moved to the new version (`aindf repin`).
 
 ## What's in this repo
 
