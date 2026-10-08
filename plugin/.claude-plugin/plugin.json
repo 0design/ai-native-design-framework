@@ -3,11 +3,22 @@
   "displayName": "AINDF",
   "version": "0.2.1",
   "description": "Build screens only from your design system: your agent looks up what it offers and validates every screen against it, through a local read-only MCP server.",
-  "author": { "name": "Oleg.Design", "url": "https://oleg.design" },
+  "author": {
+    "name": "Oleg.Design",
+    "url": "https://oleg.design"
+  },
   "homepage": "https://github.com/0design/ai-native-design-framework",
+  "documentationUrl": "https://github.com/0design/ai-native-design-framework/tree/main/plugin#readme",
+  "supportUrl": "https://github.com/0design/ai-native-design-framework/issues",
   "repository": "https://github.com/0design/ai-native-design-framework",
   "license": "MIT",
-  "keywords": ["design-system", "mcp", "ui", "validation", "aindf"],
+  "keywords": [
+    "design-system",
+    "mcp",
+    "ui",
+    "validation",
+    "aindf"
+  ],
   "userConfig": {
     "bundlePath": {
       "type": "file",
