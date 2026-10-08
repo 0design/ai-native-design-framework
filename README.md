@@ -9,6 +9,18 @@
 
 > Add AINDF to my design system and this project. AINDF is at https://github.com/0design/ai-native-design-framework; version 0.2 runs from a clone. Clone it to `<dir>` (an absolute path). In my design system's folder, write my design system down like `examples/demo-ds`: the seven 0.2 sources (`tokens`, `taxonomy`, `slots`, `applicability`, `presets`, `components`, `bindings`) plus `aindf.config.json`, which lists them (schemas: 0.1 in `schemas/`, 0.2 in `packages/aindf-kit/schema/0.2`). From that folder run `node <dir>/packages/aindf-kit/src/cli.mjs check aindf.config.json` until it passes, then `node <dir>/packages/aindf-kit/src/cli.mjs bundle aindf.config.json --out aindf.bundle.json`. Connect the bundle to your agent's MCP settings; in Claude Code run `claude mcp add aindf -- node <dir>/packages/aindf-kit/src/cli.mjs mcp <absolute path>/aindf.bundle.json` (or start Claude Code with `--plugin-dir <dir>/plugin` and set its bundle path); any other agent runs the same `node … mcp …` command as a stdio server in its MCP settings. From then on, write screens only as screen configs pinned to that bundle: look up components, slots, modifiers and presets, and call `validate-screen` until it passes. Never hardcode a value my design system does not have; when something is missing, tell me instead of writing your own CSS. Do not change the design system without my approval.
 
+## Install
+
+The prompt above works from a clone; the kit is also on npm, so you can do the same without one. You need Node.js 20.10 or newer. From your design system's folder:
+
+```sh
+npx -y @ai-native-design-framework/kit check aindf.config.json
+npx -y @ai-native-design-framework/kit bundle aindf.config.json --out aindf.bundle.json
+claude mcp add aindf -- npx -y @ai-native-design-framework/kit mcp /absolute/path/to/aindf.bundle.json
+```
+
+The first command checks your design system, the second makes the bundle (one file per version), the third connects it to Claude Code. Any other agent runs the last command as a stdio MCP server.
+
 ## How it works
 
 ```
