@@ -23,7 +23,15 @@ jobs:
       - run: node --test scripts/test/public-text-check.test.mjs
       - name: Pull request text
         if: github.event_name == 'pull_request'
-        run: node scripts/public-text-check.mjs --pr "$BASE_SHA" "$HEAD_SHA"
+        # The check runs from the base branch, so a pull request cannot loosen the check that judges it
+        # (the first time, when base has no check yet, it runs the pull request's own copy).
+        run: |
+          if git cat-file -e "$BASE_SHA:scripts/public-text-check.mjs" 2>/dev/null; then
+            git show "$BASE_SHA:scripts/public-text-check.mjs" > "$RUNNER_TEMP/public-text-check.mjs"
+          else
+            cp scripts/public-text-check.mjs "$RUNNER_TEMP/public-text-check.mjs"
+          fi
+          node "$RUNNER_TEMP/public-text-check.mjs" --pr "$BASE_SHA" "$HEAD_SHA"
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}

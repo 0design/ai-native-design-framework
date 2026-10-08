@@ -8,14 +8,14 @@ import { fileURLToPath } from 'node:url';
 import { violations } from '../public-text-check.mjs';
 
 const script = fileURLToPath(new URL('../public-text-check.mjs', import.meta.url));
-const bad = ['owner ' + 'decision 07.10', "needs the owner" + "'s OK", 'Рішення ' + 'Олега', 'see 0D' + '-500', 'https://linear' + '.app/x', 'plugin ' + 'plan step 5', 'REP' + 'ORT', 'DELIVERY' + '-02', 'the orchestr' + 'ator', 'do not ' + 'merge', 'Draft for the owner' + ' review'];
+const bad = ['квіз ' + '3', 'Quiz ' + '#3', 'plan ' + 'steps', 'review ' + 'rounds', "don't " + 'merge', 'the owner ' + 'decided', 'owner ' + 'sign-off', 'Ask ' + 'Oleg', 'owner ' + 'decision 07.10', "needs the owner" + "'s OK", 'Рішення ' + 'Олега', 'see 0D' + '-500', 'https://linear' + '.app/x', 'plugin ' + 'plan step 5', 'REP' + 'ORT', 'DELIVERY' + '-02', 'the orchestr' + 'ator', 'do not ' + 'merge', 'Draft for the owner' + ' review'];
 
 test('each internal-process phrase is refused with its line', () => {
   for (const b of bad) assert.equal(violations(`ok line\n${b}\n`)[0]?.line, 2, b);
 });
 
 test('legitimate text passes: the author, the brand, the license line, a yaml owner key, the DS owner role', () => {
-  const ok = 'Oleg.Design (https://oleg.design) design.oleg/aindf\nCopyright (c) 2026 Oleg Kukharuk\nowner: team-a\nAsk the DS owner for a missing capability.\n';
+  const ok = 'DS owner approved the tokens\nOleg.Design (https://oleg.design) design.oleg/aindf\nCopyright (c) 2026 Oleg Kukharuk\nowner: team-a\nAsk the DS owner for a missing capability.\n';
   assert.deepEqual(violations(ok), []);
 });
 
@@ -47,4 +47,27 @@ test('tree mode: a tracked file with a phrase fails; a clean tree passes', () =>
   assert.equal(run({}, '--tree').status, 0);
   writeFileSync(join(d, 'n.md'), 'x\nowner ' + 'approved\n'); g('add', '.');
   const r = run({}, '--tree'); assert.equal(r.status, 1); assert.match(r.stderr, /n\.md:2/);
+});
+
+const channel = (what, where, env, extra = () => {}) => test(`PR mode: the phrase is caught in ${what} alone`, () => {
+  const { d, g, run } = repo();
+  g('checkout', '-qb', 'b'); writeFileSync(join(d, 'a.md'), 'fine\nmore\n'); g('commit', '-qam', 'Reword the intro'); extra(d, g);
+  const r = run(env, '--pr', 'main', 'b');
+  assert.equal(r.status, 1, r.stderr); assert.match(r.stderr, where);
+});
+const phrase = 'owner ' + 'decision 07.10';
+channel('the title', /PR title/, { PR_TITLE: phrase, PR_BODY: 'Docs only.' });
+channel('the description', /PR description:2/, { PR_TITLE: 'Reword', PR_BODY: `Docs only.\n${phrase}` });
+channel('a commit message', /commit [0-9a-f]{8}:3/, { PR_TITLE: 'Reword', PR_BODY: 'Docs only.' }, (d, g) => { writeFileSync(join(d, 'a.md'), 'fine\nmore\nx\n'); g('commit', '-qam', `Add x\n\n${phrase}`); });
+channel('an added line', /a\.md:3/, { PR_TITLE: 'Reword', PR_BODY: 'Docs only.' }, (d, g) => { writeFileSync(join(d, 'a.md'), `fine\nmore\n// ${phrase}\n`); g('commit', '-qam', 'Add x'); });
+
+test('PR mode: title and description come from the event file, as in CI', () => {
+  const { d, g, run } = repo();
+  g('checkout', '-qb', 'b'); writeFileSync(join(d, 'a.md'), 'fine\nmore\n'); g('commit', '-qam', 'Reword');
+  const ev = join(d, '..', `ev-${Date.now()}.json`);
+  writeFileSync(ev, JSON.stringify({ pull_request: { title: phrase, body: null } }));
+  const r = run({ GITHUB_EVENT_PATH: ev }, '--pr', 'main', 'b');
+  assert.equal(r.status, 1); assert.match(r.stderr, /PR title/);
+  writeFileSync(ev, JSON.stringify({ pull_request: { title: 'Reword', body: 'Docs only.' } }));
+  assert.equal(run({ GITHUB_EVENT_PATH: ev }, '--pr', 'main', 'b').status, 0);
 });
