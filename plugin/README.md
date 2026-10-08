@@ -1,7 +1,13 @@
 # AINDF plugin
 
-> Not listed in any marketplace yet. To try it, clone this repository and start Claude Code with
-> `claude --plugin-dir plugin`.
+> Install from this repository, which is also its marketplace:
+>
+> ```sh
+> claude plugin marketplace add 0design/ai-native-design-framework
+> claude plugin install aindf@aindf
+> ```
+>
+> Or try it from a clone: `claude --plugin-dir plugin`.
 
 The plugin gives your agent two things:
 

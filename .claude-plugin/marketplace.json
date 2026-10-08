@@ -1,0 +1,15 @@
+{
+  "name": "aindf",
+  "description": "AINDF: build screens only from your design system.",
+  "owner": {
+    "name": "Oleg.Design",
+    "url": "https://oleg.design"
+  },
+  "plugins": [
+    {
+      "name": "aindf",
+      "source": "./plugin",
+      "description": "Build screens only from your design system: your agent looks up what it offers and validates every screen against it, through a local read-only MCP server."
+    }
+  ]
+}
