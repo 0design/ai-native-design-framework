@@ -33,7 +33,7 @@ test('LICENSE in the package is the repository LICENSE', () => {
 
 test('MCP Registry: server.json names this package, its version and mcpName; the run is `aindf mcp <bundle>` over stdio', () => {
   assert.equal(server.name, pkg.mcpName);
-  assert.equal(server.name, 'design.oleg/aindf');
+  assert.equal(server.name, 'io.github.0design/aindf', 'the GitHub OIDC login of the registry grants io.github.<repository owner>/*');
   const ci = readFileSync(`${dir}../../.github/workflows/kit.yml`, 'utf8');
   const pinned = /SCHEMA_URL: (\S+)/.exec(ci)?.[1];
   assert.ok(pinned, 'kit.yml pins SCHEMA_URL');

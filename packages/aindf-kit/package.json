@@ -20,7 +20,7 @@
     "screenspec",
     "validation"
   ],
-  "mcpName": "design.oleg/aindf",
+  "mcpName": "io.github.0design/aindf",
   "bin": {
     "aindf": "./src/cli.mjs"
   },
