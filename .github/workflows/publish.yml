@@ -1,0 +1,154 @@
+name: publish
+# Publishes @ai-native-design-framework/kit to npm with provenance, then lists it in the MCP Registry. No secrets: npm
+# trusted publishing and the registry's GitHub login both use this workflow's OIDC token. Manual only: it needs a release
+# tag and the sha256 of the tarball that was reviewed, and runs in the GitHub Environment `npm-publish`.
+# On pull requests it only packs the kit and reports what would be published (the file list and the tarball sha256).
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to publish, for example v0.2.1
+        required: true
+      tarball_sha256:
+        description: sha256 of the tarball that was reviewed (printed by the pack job on the pull request)
+        required: true
+  pull_request:
+    paths: ['packages/aindf-kit/**', '.github/workflows/publish.yml', 'scripts/public-text-check.mjs']
+permissions:
+  contents: read
+env:
+  NPM_VERSION: 11.21.0 # pinned (trusted publishing needs npm 11.5.1 or newer); the same files give the same tarball
+  MCP_PUBLISHER_VERSION: v1.8.1
+  MCP_PUBLISHER_SHA256: a06c9096dcb9727c13555b6be26c7effa707b01f06a4c561ba7a3635443cf2cc # mcp-publisher_linux_amd64.tar.gz of that release
+jobs:
+  pack:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      sha256: ${{ steps.pack.outputs.sha256 }}
+      version: ${{ steps.pack.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && format('refs/tags/{0}', inputs.tag) || '' }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --global npm@${{ env.NPM_VERSION }}
+      - name: Pack
+        id: pack
+        working-directory: packages/aindf-kit
+        run: |
+          npm pack --json --pack-destination "$RUNNER_TEMP" > "$RUNNER_TEMP/pack.json"
+          file=$(node -p "require('$RUNNER_TEMP/pack.json')[0].filename")
+          version=$(node -p "require('./package.json').version")
+          sha=$(sha256sum "$RUNNER_TEMP/$file" | cut -d' ' -f1)
+          echo "sha256=$sha" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tarball $file sha256 $sha"
+          {
+            echo "### $file"
+            echo
+            echo "sha256: \`$sha\`"
+            echo
+            echo "Files:"
+            node -p "require('$RUNNER_TEMP/pack.json')[0].files.map(f => '- ' + f.path).join('\n')"
+          } >> "$GITHUB_STEP_SUMMARY"
+          mkdir "$RUNNER_TEMP/unpacked" && tar -xzf "$RUNNER_TEMP/$file" -C "$RUNNER_TEMP/unpacked"
+          cp "$RUNNER_TEMP/$file" "$RUNNER_TEMP/kit.tgz"
+      - name: The package is public and its files are what the repository says
+        working-directory: packages/aindf-kit
+        run: |
+          node -e "const p=require('./package.json'); if (p.private) { console.error('package.json is private'); process.exit(1) } if (p.name !== '@ai-native-design-framework/kit') process.exit(1)"
+          node --test test/package.test.mjs
+      - name: Text scan of the tarball contents
+        run: node scripts/public-text-check.mjs --dir "$RUNNER_TEMP/unpacked/package"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kit-tarball
+          path: ${{ runner.temp }}/kit.tgz
+          retention-days: 7
+  publish:
+    # a run started from a branch other than main is refused here and by the Environment's branch rule
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    needs: pack
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: npm-publish
+    outputs:
+      commit: ${{ steps.verify.outputs.commit }}
+    permissions:
+      contents: read
+      id-token: write # npm trusted publishing (OIDC) and provenance
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      - run: npm install --global npm@${{ env.NPM_VERSION }}
+      - name: The tag, the version and the reviewed tarball agree
+        id: verify
+        env:
+          TAG: ${{ inputs.tag }}
+          EXPECTED_SHA: ${{ inputs.tarball_sha256 }}
+          PACKED_SHA: ${{ needs.pack.outputs.sha256 }}
+          PACKED_VERSION: ${{ needs.pack.outputs.version }}
+        run: |
+          [ "$TAG" = "v$PACKED_VERSION" ] || { echo "tag $TAG does not match package version $PACKED_VERSION"; exit 1; }
+          [ "$(git cat-file -t "refs/tags/$TAG")" = tag ] || { echo "$TAG is not an annotated tag"; exit 1; }
+          git fetch --quiet origin main
+          git merge-base --is-ancestor "$(git rev-list -n1 "refs/tags/$TAG")" origin/main || { echo "$TAG is not on main"; exit 1; }
+          [ "$PACKED_SHA" = "$EXPECTED_SHA" ] || { echo "tarball sha256 $PACKED_SHA is not the reviewed $EXPECTED_SHA"; exit 1; }
+          echo "commit=$(git rev-list -n1 "refs/tags/$TAG")" >> "$GITHUB_OUTPUT"
+          # what is about to be published, packed again here, is the reviewed tarball
+          (cd packages/aindf-kit && npm pack --pack-destination "$RUNNER_TEMP" >/dev/null)
+          again=$(sha256sum "$RUNNER_TEMP"/ai-native-design-framework-kit-*.tgz | cut -d' ' -f1)
+          [ "$again" = "$EXPECTED_SHA" ] || { echo "re-packed sha256 $again is not the reviewed $EXPECTED_SHA"; exit 1; }
+      - name: Publish (npm trusted publishing with OIDC; provenance is added automatically)
+        working-directory: packages/aindf-kit
+        run: npm publish --access public
+  registry:
+    # lists the published package in the MCP Registry; the registry's GitHub login grants io.github.<repository owner>/*
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    needs: [pack, publish]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: npm-publish
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.publish.outputs.commit }} # the commit the publish job verified, not the tag name again
+          persist-credentials: false
+      - name: server.json names the version that was published
+        env:
+          VERSION: ${{ needs.pack.outputs.version }}
+        run: node -e "const s=require('./packages/aindf-kit/server.json'); if (s.version !== process.env.VERSION || s.packages[0].version !== process.env.VERSION) { console.error('server.json version differs from ' + process.env.VERSION); process.exit(1) }"
+      - name: Wait until npm serves the published version
+        env:
+          VERSION: ${{ needs.pack.outputs.version }}
+        run: |
+          for i in $(seq 1 20); do
+            npm view "@ai-native-design-framework/kit@$VERSION" version >/dev/null 2>&1 && exit 0
+            sleep 10
+          done
+          echo "npm does not serve @ai-native-design-framework/kit@$VERSION yet"; exit 1
+      - name: Install mcp-publisher (pinned release, checked against its sha256)
+        run: |
+          curl -sfL "https://github.com/modelcontextprotocol/registry/releases/download/$MCP_PUBLISHER_VERSION/mcp-publisher_linux_amd64.tar.gz" -o "$RUNNER_TEMP/mcp-publisher.tar.gz"
+          echo "$MCP_PUBLISHER_SHA256  $RUNNER_TEMP/mcp-publisher.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/mcp-publisher.tar.gz" -C "$RUNNER_TEMP" mcp-publisher
+      - name: Publish to the MCP Registry
+        working-directory: packages/aindf-kit
+        run: |
+          "$RUNNER_TEMP/mcp-publisher" login github-oidc
+          "$RUNNER_TEMP/mcp-publisher" publish

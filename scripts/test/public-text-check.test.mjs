@@ -101,3 +101,12 @@ test('typographic dashes are folded, lower-case issue ids are caught, and "ко�
   assert.deepEqual(violations('наш колега і колегам'), []);
   assert.equal(violations('Олег ' + 'каже').length, 1);
 });
+
+test('dir mode: an unpacked folder with a phrase fails with its path, a clean one passes', () => {
+  const d = mkdtempSync(join(tmpdir(), 'ptc-dir-'));
+  mkdirSync(join(d, 'src')); writeFileSync(join(d, 'src/a.mjs'), 'export const a = 1;\n');
+  const run = () => spawnSync(process.execPath, [script, '--dir', d], { encoding: 'utf8' });
+  assert.equal(run().status, 0);
+  writeFileSync(join(d, 'src/b.mjs'), '// ok\n// ' + 'owner ' + 'decision 07.10\n');
+  const r = run(); assert.equal(r.status, 1); assert.match(r.stderr, /src\/b\.mjs:2/);
+});
