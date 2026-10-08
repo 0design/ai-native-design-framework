@@ -77,9 +77,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: npm-publish
+    outputs:
+      commit: ${{ steps.verify.outputs.commit }}
     permissions:
       contents: read
-      id-token: write # provenance
+      id-token: write # npm trusted publishing (OIDC) and provenance
     steps:
       - uses: actions/checkout@v4
         with:
@@ -92,6 +94,7 @@ jobs:
           registry-url: https://registry.npmjs.org
       - run: npm install --global npm@${{ env.NPM_VERSION }}
       - name: The tag, the version and the reviewed tarball agree
+        id: verify
         env:
           TAG: ${{ inputs.tag }}
           EXPECTED_SHA: ${{ inputs.tarball_sha256 }}
@@ -103,6 +106,7 @@ jobs:
           git fetch --quiet origin main
           git merge-base --is-ancestor "$(git rev-list -n1 "refs/tags/$TAG")" origin/main || { echo "$TAG is not on main"; exit 1; }
           [ "$PACKED_SHA" = "$EXPECTED_SHA" ] || { echo "tarball sha256 $PACKED_SHA is not the reviewed $EXPECTED_SHA"; exit 1; }
+          echo "commit=$(git rev-list -n1 "refs/tags/$TAG")" >> "$GITHUB_OUTPUT"
           # what is about to be published, packed again here, is the reviewed tarball
           (cd packages/aindf-kit && npm pack --pack-destination "$RUNNER_TEMP" >/dev/null)
           again=$(sha256sum "$RUNNER_TEMP"/ai-native-design-framework-kit-*.tgz | cut -d' ' -f1)
@@ -123,8 +127,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: refs/tags/${{ inputs.tag }}
+          ref: ${{ needs.publish.outputs.commit }} # the commit the publish job verified, not the tag name again
           persist-credentials: false
+      - name: server.json names the version that was published
+        env:
+          VERSION: ${{ needs.pack.outputs.version }}
+        run: node -e "const s=require('./packages/aindf-kit/server.json'); if (s.version !== process.env.VERSION || s.packages[0].version !== process.env.VERSION) { console.error('server.json version differs from ' + process.env.VERSION); process.exit(1) }"
       - name: Wait until npm serves the published version
         env:
           VERSION: ${{ needs.pack.outputs.version }}
