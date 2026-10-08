@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Checks the plugin as Claude Code would start it: the manifest, the MCP entry (one file, no shell, no npm), the
 // copies (sync --check), and the server itself over stdio with each kind of `bundlePath`. Exits 1 and names the step.
-import { readFileSync } from 'node:fs';
+import { readFileSync, statSync } from 'node:fs';
 import { spawn, execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
@@ -12,7 +12,7 @@ const repo = join(plugin, '..');
 const json = p => JSON.parse(readFileSync(join(plugin, p), 'utf8'));
 let step = 'copies';
 const run = (arg, requests) => new Promise((resolve, reject) => {
-  const child = spawn(process.execPath, [join(plugin, 'server/launch.mjs'), arg], { cwd: repo });
+  const child = spawn(join(plugin, 'server/launch.sh'), [arg], { cwd: repo }); // the file the .mcp.json command names
   let out = '', err = '';
   child.stdout.on('data', d => { out += d; }); child.stderr.on('data', d => { err += d; }); child.on('error', reject);
   child.on('close', code => resolve({ code, err, replies: Object.fromEntries(out.trim().split('\n').filter(Boolean).map(l => JSON.parse(l)).map(r => [r.id, r])) }));
@@ -45,8 +45,10 @@ try {
 
   step = 'mcp entry';
   const server = json('.mcp.json').mcpServers.aindf;
-  assert.equal(server.command, 'node');
-  assert.deepEqual(server.args, ['${CLAUDE_PLUGIN_ROOT}/server/launch.mjs', '${user_config.bundlePath}']);
+  assert.equal(server.command, '${CLAUDE_PLUGIN_ROOT}/server/launch.sh', 'a plain shell script by a literal path under the plugin root');
+  assert.deepEqual(server.args, ['${user_config.bundlePath}']);
+  assert.ok(statSync(join(plugin, 'server/launch.sh')).mode & 0o100, 'launch.sh is executable');
+  assert.equal(readFileSync(join(plugin, 'server/launch.sh'), 'utf8').split('\n')[0], '#!/bin/sh');
 
   const demo = json('demo/aindf-demo.bundle.json');
   for (const [name, arg] of [['empty bundlePath → demo', ''], ['unexpanded bundlePath → demo', '${user_config.bundlePath}']]) {

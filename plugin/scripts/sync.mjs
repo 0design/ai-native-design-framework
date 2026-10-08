@@ -33,7 +33,7 @@ if (process.argv.includes('--check')) {
     else if (!readFileSync(from).equals(readFileSync(to))) problems.push(`differs from source: ${relative(plugin, to)} (run node plugin/scripts/sync.mjs)`);
   }
   // every file in plugin/ is either a copy or one of the plugin's own files; anything else is refused
-  const own = ['.claude-plugin/plugin.json', '.mcp.json', 'README.md', 'COPIES.SHA256SUMS', 'scripts/sync.mjs', 'scripts/check.mjs', 'server/launch.mjs'].map(f => join(plugin, f));
+  const own = ['.claude-plugin/plugin.json', '.mcp.json', 'README.md', 'COPIES.SHA256SUMS', 'scripts/sync.mjs', 'scripts/check.mjs', 'server/launch.mjs', 'server/launch.sh'].map(f => join(plugin, f));
   const extra = walk(plugin).filter(f => !copies.some(([, to]) => to === f) && !own.includes(f)).map(f => `not allowed in plugin/: ${relative(plugin, f)}`);
   problems.push(...extra);
   if (!existsSync(sumsPath) || readFileSync(sumsPath, 'utf8') !== sums.join('\n') + '\n') problems.push('COPIES.SHA256SUMS is stale');
