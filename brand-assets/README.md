@@ -6,6 +6,7 @@ Favicon and glyphs of the AINDF sign system. Every glyph is built from one curso
 |---|---|
 | `favicon/aindf-favicon.svg` | Favicon and marketplace icon, vector |
 | `favicon/aindf-favicon-1024.png` | Favicon, 1024 × 1024 PNG (plugin and catalog icon) |
+| `favicon/aindf-favicon-4096.png` | Favicon, 4096 × 4096 PNG (print and large layouts) |
 | `glyphs/aindf-agent.svg` | Agent: one cursor, tilted |
 | `glyphs/aindf-atom.svg` | Atom / token: one cursor |
 | `glyphs/aindf-component.svg` | Component: two cursors, up and down |
