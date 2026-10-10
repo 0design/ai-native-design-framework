@@ -49,6 +49,8 @@ system once, and every screen built from it gets the fix on the next build, once
 - [`SPEC.md`](SPEC.md): the specification.
 - [`packages/aindf-kit`](packages/aindf-kit): the check, the builder and the MCP server.
 - [`plugin`](plugin): the plugin for Claude Code.
+- [`skills`](skills): the `aindf-screen-author` skill at the path the skills CLI reads, for agents without the
+  plugin: `npx skills add 0design/ai-native-design-framework`.
 - [`examples/demo-ds`](examples/demo-ds): a demo design system with three examples you can run.
 - [`schemas`](schemas) and [`patterns`](patterns): the JSON Schemas of version 0.1 and an example pattern. The 0.2
   schemas are in [`packages/aindf-kit/schema/0.2`](packages/aindf-kit/schema/0.2).
