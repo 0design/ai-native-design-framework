@@ -21,6 +21,14 @@ claude mcp add aindf -- npx -y @ai-native-design-framework/kit mcp /absolute/pat
 
 The first command checks your design system, the second makes the bundle (one file per version), the third connects it to Claude Code. Any other agent runs the last command as a stdio MCP server.
 
+To give an agent without the plugin the screen-authoring skill, install it with the [skills CLI](https://skills.sh):
+
+```sh
+npx skills add 0design/ai-native-design-framework
+```
+
+It installs `aindf-screen-author`, which works through the MCP server connected above.
+
 ## How it works
 
 ```
