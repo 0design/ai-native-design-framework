@@ -53,7 +53,8 @@ The server runs on your machine over stdio, so the plugin works in Claude Code a
 
 - `server/kit/`, `skills/aindf-screen-author/SKILL.md`, `demo/aindf-demo.bundle.json` and `LICENSE` are **copies**
   from this repository (`packages/aindf-kit`, `examples/demo-ds`). Change the source, then run
-  `node scripts/plugin/sync.mjs`.
+  `node scripts/plugin/sync.mjs`. It also writes the same skill to `skills/aindf-screen-author/SKILL.md` at the
+  repository root, where the skills CLI looks for it.
 - `node scripts/plugin/check.mjs` checks the copies, the manifest, the MCP entry and the server with each kind of
   `bundlePath`. CI runs it, plus `claude plugin validate --strict plugin`.
 
