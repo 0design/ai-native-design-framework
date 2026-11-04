@@ -52,6 +52,8 @@ Without AINDF your agent writes HTML and CSS itself and can ignore your design s
 config, and the check passes only what your design system offers. Fix how a component looks or works in your design
 system once, and every screen built from it gets the fix on the next build, once the screens are moved to the new version (`aindf repin`).
 
+Check a screen against your design system as a workflow step: [aindf-validator on QFactory](https://qfactory.io/components/aindf-validator?utm_source=github&utm_medium=readme&utm_campaign=ai-native-design-framework)
+
 ## What's in this repo
 
 - [`SPEC.md`](SPEC.md): the specification.
@@ -82,3 +84,5 @@ result you want.
 - For AI agents: build screens only through the design system's MCP. The rules are in
   [the skill](plugin/skills/aindf-screen-author/SKILL.md).
 - License: [MIT](LICENSE)
+
+More from Oleg.Design: [UNSLOP](https://github.com/0design/unslop-skill) · [Q-Core](https://github.com/0design/Q-Core) · [QFactory](https://qfactory.io/?utm_source=github&utm_medium=readme&utm_campaign=ai-native-design-framework)
